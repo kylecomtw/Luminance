@@ -7,6 +7,7 @@ package tw.com.kyle.luminance;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
@@ -22,6 +23,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.highlight.TokenSources;
 import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.search.spans.SpanWeight.Postings;
 import org.apache.lucene.search.spans.Spans;
@@ -37,7 +39,6 @@ public class LumQuery {
     private IndexReader idx_reader = null;
 
     public LumQuery(String index_dir) throws IOException, ParseException {
-
         Directory index = FSDirectory.open(Paths.get(index_dir));
         idx_reader = DirectoryReader.open(index);
 
@@ -74,6 +75,8 @@ public class LumQuery {
             while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {
                 while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
                     System.out.printf("%d, %d, %d%n", nxtDoc, spans.startPosition(), spans.endPosition());
+                    TokenStream tokenStream = TokenSources.getTermVectorTokenStreamOrNull(
+                            "content", idx_reader.getTermVectors(nxtDoc), -1);
                 }
 
             }
