@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,8 +41,9 @@ public class PropLoader {
     
     private static Map<String, String> default_props(){
         Map<String, String> map = new HashMap<>();
-        map.put("indir", "text_data/");
-        map.put("in_filter", "*.txt");
+        map.put("index_dir", "lum_index");
+        map.put("text_dir", "text_data");
+        map.put("in_filter", "*.txt");        
         
         return map;
     }
