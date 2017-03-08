@@ -62,7 +62,7 @@ public class MainApp {
     private static void query(Map<String, String> props) throws IOException, ParseException {
         LumQuery lum_query = new LumQuery(props.get("index_dir"));
         // lum_query.query("三國");
-        lum_query.span_query("水鏡");
+        lum_query.span_query(props.get("query_str"));
         // System.out.println(lum_query.getTermFreq("學"));
     }
 

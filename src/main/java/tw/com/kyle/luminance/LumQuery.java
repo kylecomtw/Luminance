@@ -13,6 +13,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
+import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -76,8 +77,9 @@ public class LumQuery {
         
         // SpanTermQuery sq = new SpanTermQuery(new Term("content", term.substring(0, 1)));        
         SpanNearQuery.Builder builder = new SpanNearQuery.Builder("content", true);
-        builder.addClause(new SpanTermQuery(new Term("content", term.substring(0,1))));
-        builder.addClause(new SpanTermQuery(new Term("content", term.substring(1,2))));
+        for(int i = 0; i < term.length(); ++i){
+            builder.addClause(new SpanTermQuery(new Term("content", term.substring(i,i+1))));
+        }        
         SpanNearQuery sq = builder.build();
         
         IndexSearcher searcher = new IndexSearcher(idx_reader);
@@ -103,15 +105,19 @@ public class LumQuery {
                         idx_reader.getTermVectors(nxtDoc), -1);
                 OffsetAttribute offsetAttr = tokenStream.getAttribute(OffsetAttribute.class);
                 PositionIncrementAttribute posincAttr = tokenStream.getAttribute(PositionIncrementAttribute.class);
+                PositionLengthAttribute poslenAttr = tokenStream.getAttribute(PositionLengthAttribute.class);
                 int pos_counter = 0;
+                int token_counter = 0;
+                int last_token_end = -1; // a work-around for filtered token
                 int[] offset_pair = {-1, -1};
                 while(tokenStream.incrementToken()){                    
-                    final int cur_pos = pos_counter;
+                    final int cur_pos = pos_counter;                                        
                     boolean spos_matched = tup_list.stream().map((x) -> x[0] == cur_pos).anyMatch((y)->y);
                     boolean epos_matched = tup_list.stream().map((x) -> x[1] == cur_pos).anyMatch((y)->y);
                     if (spos_matched) offset_pair[0] = offsetAttr.startOffset();
-                    if (epos_matched) offset_pair[1] = offsetAttr.startOffset();
+                    if (epos_matched) offset_pair[1] = last_token_end;
                     
+                    last_token_end = offsetAttr.endOffset();
                     pos_counter += posincAttr.getPositionIncrement();
                     
                     if (offset_pair[0] >= 0 && offset_pair[1] >= 0){

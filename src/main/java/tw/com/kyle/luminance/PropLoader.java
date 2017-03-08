@@ -8,6 +8,7 @@ package tw.com.kyle.luminance;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -23,7 +24,7 @@ public class PropLoader {
         Properties props = new Properties();
         try {
             FileInputStream in = new FileInputStream("luminance.properties");
-            props.load(in);
+            props.load(new InputStreamReader(in, "utf-8"));
             in.close();
         } catch (FileNotFoundException ex) {
             Logger.getLogger(PropLoader.class.getName()).log(Level.SEVERE, null, ex);
