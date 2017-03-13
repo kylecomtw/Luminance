@@ -1,5 +1,7 @@
 *~
 *.tmp
+*.swp
 class/
 *.class
+target/
 luminance.properties
