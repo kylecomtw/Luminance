@@ -71,7 +71,7 @@ public class TextUtils {
             } else if (ch.equals(")")){
                 ignore_ch = false;
             } else if (ch.equals("\u3000")) {
-                annot_list.add(String.format("(%d, %d, %s)", offset_counter - buf.length(), offset_counter, buf));
+                annot_list.add(String.format("(%d,%d,%s)", offset_counter - buf.length(), offset_counter, buf));
                 buf = "";
             } else if (ch.equals("\r") || ch.equals("\n") || ch.equals("\t") || ch.equals(" ")) {
                 //! pass
@@ -83,7 +83,7 @@ public class TextUtils {
         }
         
         if(buf.length() > 0){
-            annot_list.add(String.format("(%d, %d, %s)", offset_counter - buf.length(), offset_counter, buf));
+            annot_list.add(String.format("(%d,%d,%s)", offset_counter - buf.length(), offset_counter, buf));
             buf = "";
         }
         
@@ -100,7 +100,7 @@ public class TextUtils {
             if (ch.equals("(")){
                 in_tag = true;
             } else if (ch.equals(")")){
-                annot_list.add(String.format("(%d, %d, %s)", offset_counter - 1, offset_counter, buf));
+                annot_list.add(String.format("(%d,%d,%s)", offset_counter - 1, offset_counter, buf));
                 in_tag = false;
             } else if (ch.equals("\u3000")) {
                 offset_counter += 1;
@@ -116,7 +116,7 @@ public class TextUtils {
         }
         
         if(buf.length() > 0){
-            annot_list.add(String.format("(%d, %d, %s)", offset_counter - 1, offset_counter, buf));
+            annot_list.add(String.format("(%d,%d,%s)", offset_counter - 1, offset_counter, buf));
             buf = "";
         }
         

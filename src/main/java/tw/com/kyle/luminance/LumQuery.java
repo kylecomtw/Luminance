@@ -77,6 +77,8 @@ public class LumQuery {
     public int span_query(String term) throws IOException {
         
         // SpanTermQuery sq = new SpanTermQuery(new Term("content", term.substring(0, 1)));        
+        if (term.length() == 0) return -1;
+        
         SpanNearQuery.Builder builder = new SpanNearQuery.Builder("content", true);
         for(int i = 0; i < term.length(); ++i){
             builder.addClause(new SpanTermQuery(new Term("content", term.substring(i,i+1))));

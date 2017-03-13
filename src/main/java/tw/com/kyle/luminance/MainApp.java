@@ -49,18 +49,13 @@ public class MainApp {
     }
     
     private static void index(Map<String, String> props) throws IOException{
-        
-        LumIndexer lum_indexer = new LumIndexer(props.get("index_dir"));
+        Luminance lum = new Luminance();    
         DirectoryStream<Path> stream = Files.newDirectoryStream(
                                         Paths.get(props.get("text_dir")), "*.txt");
         for(Path path: stream) {
             System.out.println(path.getFileName());            
-            FileInputStream in = new FileInputStream(path.toString());
-            BufferedReader br = new BufferedReader(new InputStreamReader(in, "utf-8"));
-            lum_indexer.index_doc(LumDocumentAdapter.FromReader(br));
-        }   
-        
-        lum_indexer.close();
+            lum.index(path, props);
+        }                   
     }
     
     private static void query(Map<String, String> props) throws IOException, ParseException {

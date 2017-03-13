@@ -21,7 +21,7 @@ public class LuminanceAnalyzerWrapper{
         amap.put("content", new StandardAnalyzer());
         amap.put("anno", AnnotAnalyzerFactory.Get(AnnotAnalyzerEnum.RangeAnnotAnalyzer));
         amap.put("base_ref", new StandardAnalyzer());
-        PerFieldAnalyzerWrapper wrapper = new PerFieldAnalyzerWrapper(new StandardAnalyzer());
+        PerFieldAnalyzerWrapper wrapper = new PerFieldAnalyzerWrapper(new StandardAnalyzer(), amap);
 
         return wrapper;
     }

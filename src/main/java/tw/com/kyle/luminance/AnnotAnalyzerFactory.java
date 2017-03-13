@@ -36,9 +36,10 @@ public class AnnotAnalyzerFactory {
                 case RangeAnnotAnalyzer:
                     Map<String, String> params = new HashMap<>();
                     Map<String, String> fparams = new HashMap<>();
-                    params.put("pattern", "(\\d+,\\d+,[^)]*)");                    
+                    params.put("pattern", "\\((\\d+,\\d+,[^)]*)\\)");                    
+                    params.put("group", "1");
                     
-                    ana = builder.withTokenizer(PatternTokenizerFactory.class, params)
+                    ana = builder.withTokenizer(OffsetTokenizerFactory.class, params)
                             .addTokenFilter(OffsetTokenFilterFactory.class, fparams)
                             .build();
                     break;                

@@ -7,7 +7,6 @@ package tw.com.kyle.luminance;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,6 +25,7 @@ public class LumDocumentChain {
     private List<LumDocument> doc_list = new ArrayList<>();
     public static LumDocumentChain FromAnnotated(String annots){
         LumDocumentChain chain = new LumDocumentChain();        
+        chain.add_text(annots);
         if (TextUtils.is_segmented(annots)) chain.add_segmentation(annots);
         if (TextUtils.is_pos_tagged(annots)) chain.add_pos_tag(annots);
         return chain;
