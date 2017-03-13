@@ -30,6 +30,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.highlight.TokenSources;
 import org.apache.lucene.search.spans.SpanNearQuery;
+import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.SpanWeight.Postings;
@@ -69,21 +70,25 @@ public class LumQuery {
 
     }
 
-    public int getTermFreq(String term) throws IOException {
-        Term term_inst = new Term("content", term);
+    public int getTermFreq(String term, String field) throws IOException {
+        Term term_inst = new Term(field, term);
         return (int) (idx_reader.totalTermFreq(term_inst));
     }
 
-    public int span_query(String term) throws IOException {
-        
-        // SpanTermQuery sq = new SpanTermQuery(new Term("content", term.substring(0, 1)));        
+    public int span_query(String term, String field, boolean useNearQuery) throws IOException {
         if (term.length() == 0) return -1;
         
-        SpanNearQuery.Builder builder = new SpanNearQuery.Builder("content", true);
-        for(int i = 0; i < term.length(); ++i){
-            builder.addClause(new SpanTermQuery(new Term("content", term.substring(i,i+1))));
-        }        
-        SpanNearQuery sq = builder.build();
+        SpanQuery sq = null;
+        if(!useNearQuery){
+            sq = new SpanTermQuery(new Term(field, term.substring(0, 1)));        
+        } else {
+        
+            SpanNearQuery.Builder builder = new SpanNearQuery.Builder(field, true);
+            for(int i = 0; i < term.length(); ++i){
+                builder.addClause(new SpanTermQuery(new Term(field, term.substring(i,i+1))));
+            }        
+            sq = builder.build();
+        }
         
         IndexSearcher searcher = new IndexSearcher(idx_reader);
         for (LeafReaderContext ctx : idx_reader.leaves()) {

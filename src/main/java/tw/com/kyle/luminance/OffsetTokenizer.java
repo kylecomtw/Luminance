@@ -6,6 +6,7 @@
 package tw.com.kyle.luminance;
 
 import java.io.IOException;
+import java.util.HashSet;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
@@ -67,6 +68,9 @@ public class OffsetTokenizer extends Tokenizer {
         
         charAttr.setEmpty().append(tag);
         offsetAttr.setOffset(correctOffset(so), correctOffset(eo));        
+        posIncAttr.setPositionIncrement(1);
+        posLenAttr.setPositionLength(1);
+        
     }
     
     @Override

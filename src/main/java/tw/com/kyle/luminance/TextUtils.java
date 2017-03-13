@@ -26,7 +26,7 @@ public class TextUtils {
     
     public static boolean is_pos_tagged(String intxt){
         Matcher m = pos_pat.matcher(intxt);
-        return m.matches();            
+        return m.find();            
     }
     
     public static String normalize(String intxt) {        
@@ -101,6 +101,7 @@ public class TextUtils {
                 in_tag = true;
             } else if (ch.equals(")")){
                 annot_list.add(String.format("(%d,%d,%s)", offset_counter - 1, offset_counter, buf));
+                buf = "";
                 in_tag = false;
             } else if (ch.equals("\u3000")) {
                 offset_counter += 1;

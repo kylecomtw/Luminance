@@ -29,30 +29,8 @@ public class OffsetTokenFilter extends TokenFilter{
     public boolean incrementToken() throws IOException {
         if (!input.incrementToken()){
             return false;
+        } else {                
+            return true;
         }
-        
-        CharTermAttribute charAttr = addAttribute(CharTermAttribute.class);        
-        String str = new String(charAttr.buffer());
-        String[] parts = str.trim().split(",");
-        if (parts.length == 3){
-            int s_offset = Integer.parseInt(parts[0]);
-            int e_offset = Integer.parseInt(parts[1]);
-            String tag = parts[2];
-            
-            // charAttr.setEmpty();
-            charAttr.append(tag);
-            // charAttr.resizeBuffer(tag.length());
-            
-            OffsetAttribute offAttr = addAttribute(OffsetAttribute.class);
-            PositionIncrementAttribute posAttr = addAttribute(PositionIncrementAttribute.class);
-            PositionLengthAttribute posLenAttr = addAttribute(PositionLengthAttribute.class);
-            posAttr.setPositionIncrement(1);
-            posLenAttr.setPositionLength(1);
-            
-            offAttr.setOffset(s_offset, e_offset);            
-        }
-                
-        return true;
-    }
-    
+    }    
 }
