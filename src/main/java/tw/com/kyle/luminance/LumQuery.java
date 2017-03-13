@@ -107,7 +107,6 @@ public class LumQuery {
                 PositionIncrementAttribute posincAttr = tokenStream.getAttribute(PositionIncrementAttribute.class);
                 PositionLengthAttribute poslenAttr = tokenStream.getAttribute(PositionLengthAttribute.class);
                 int pos_counter = 0;
-                int token_counter = 0;
                 int last_token_end = -1; // a work-around for filtered token
                 int[] offset_pair = {-1, -1};
                 while(tokenStream.incrementToken()){                    
