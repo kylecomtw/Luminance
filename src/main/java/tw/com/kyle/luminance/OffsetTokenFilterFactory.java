@@ -14,7 +14,7 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * @author Sean_S325
  */
 public class OffsetTokenFilterFactory extends TokenFilterFactory {
-    protected OffsetTokenFilterFactory(Map<String, String> args) {
+    public OffsetTokenFilterFactory(Map<String, String> args) {
         super(args);
     }
 

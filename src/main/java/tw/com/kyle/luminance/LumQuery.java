@@ -31,6 +31,7 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.highlight.TokenSources;
 import org.apache.lucene.search.spans.SpanNearQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
+import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.SpanWeight.Postings;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
@@ -84,10 +85,12 @@ public class LumQuery {
         
         IndexSearcher searcher = new IndexSearcher(idx_reader);
         for (LeafReaderContext ctx : idx_reader.leaves()) {
-            Spans spans = sq.createWeight(searcher, false).getSpans(ctx, Postings.POSITIONS);
+            SpanWeight weights = sq.createWeight(searcher, false);
+            if(weights == null) continue;
+            Spans spans = weights.getSpans(ctx, Postings.POSITIONS);
             if (spans == null){
                 System.out.printf("Nothing found for %s%n", term);
-                return 0;
+                continue;
             }
             int nxtDoc = 0;
             while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {                

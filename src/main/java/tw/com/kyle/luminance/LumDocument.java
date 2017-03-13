@@ -18,7 +18,7 @@ public class LumDocument {
     private String doc_type = DISCOURSE;
     private String doc_class = GENERIC;
     private String timestamp = DateUtils.now();
-    private String base_ref = null;
+    private String base_ref = "";
     private String content = "";
     
     //! Getters and Setters

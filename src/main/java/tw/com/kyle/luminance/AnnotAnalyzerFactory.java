@@ -41,7 +41,7 @@ public class AnnotAnalyzerFactory {
                     ana = builder.withTokenizer(PatternTokenizerFactory.class, params)
                             .addTokenFilter(OffsetTokenFilterFactory.class, fparams)
                             .build();
-                    break;
+                    break;                
                 case TokenAnnotAnalyzer:
                     //! TokenAnnotAnalyzer at best is a convenient interface of
                     //! RangeAnnotAnalyzer. That is, Token is just a lenth-1-range

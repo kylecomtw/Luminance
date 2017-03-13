@@ -5,7 +5,10 @@
  */
 package tw.com.kyle.luminance;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -51,9 +54,10 @@ public class MainApp {
         DirectoryStream<Path> stream = Files.newDirectoryStream(
                                         Paths.get(props.get("text_dir")), "*.txt");
         for(Path path: stream) {
-            System.out.println(path.getFileName());
-            List<String> lines = Files.readAllLines(path, Charset.forName("utf-8"));            
-            lum_indexer.index_text(String.join("", lines));         
+            System.out.println(path.getFileName());            
+            FileInputStream in = new FileInputStream(path.toString());
+            BufferedReader br = new BufferedReader(new InputStreamReader(in, "utf-8"));
+            lum_indexer.index_doc(LumDocumentAdapter.FromReader(br));
         }   
         
         lum_indexer.close();

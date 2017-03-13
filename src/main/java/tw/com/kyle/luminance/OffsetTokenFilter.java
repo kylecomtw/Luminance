@@ -6,10 +6,14 @@
 package tw.com.kyle.luminance;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
+import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
 
 /**
  *
@@ -29,6 +33,7 @@ public class OffsetTokenFilter extends TokenFilter{
         
         CharTermAttribute charAttr = getAttribute(CharTermAttribute.class);        
         int length = charAttr.length();
+        int pos_counter = 0;
         String str = new String(charAttr.buffer());
         String[] parts = str.split(",");
         if (parts.length == 3){
@@ -39,7 +44,13 @@ public class OffsetTokenFilter extends TokenFilter{
             charAttr.setEmpty();
             charAttr.copyBuffer(tag.toCharArray(), 0, tag.length());
             OffsetAttribute offAttr = addAttribute(OffsetAttribute.class);
+            PositionIncrementAttribute posAttr = addAttribute(PositionIncrementAttribute.class);
+            PositionLengthAttribute posLenAttr = addAttribute(PositionLengthAttribute.class);
+            posAttr.setPositionIncrement(1);
+            posLenAttr.setPositionLength(1);
+            
             offAttr.setOffset(s_offset, e_offset);            
+            pos_counter += 1;
         }
                 
         return true;

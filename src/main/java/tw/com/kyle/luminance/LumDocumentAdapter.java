@@ -15,15 +15,18 @@ import java.util.logging.Logger;
  * @author Sean_S325
  */
 public class LumDocumentAdapter {
-    public static LumDocument FromString(BufferedReader reader){        
+    public static LumDocument FromReader(BufferedReader reader){        
         LumDocument doc = new LumDocument();
         try {
             String line = reader.readLine();
             StringBuilder sb = new StringBuilder();
             while(line != null){
                 if (line.startsWith("#")){
-                    String[] toks = line.split("=");
-                    if (toks.length <= 2) continue;
+                    String[] toks = line.split(":");
+                    if (toks.length <= 2) {
+                        line = reader.readLine();
+                        continue;
+                    }
                     switch(toks[0].trim().toLowerCase()){
                         case "doctype":
                             doc.SetDocType(toks[1].trim());

@@ -44,7 +44,8 @@ public class PropLoader {
         Map<String, String> map = new HashMap<>();
         map.put("index_dir", "lum_index");
         map.put("text_dir", "text_data");
-        map.put("in_filter", "*.txt");        
+        map.put("in_filter", "*.txt");     
+        map.put("query_str", "");
         
         return map;
     }

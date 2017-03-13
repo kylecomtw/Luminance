@@ -38,14 +38,14 @@ public class LumIndexer {
         idx_writer.addDocument(doc);
     }
     
-    public void index_doc(LumDocument lum_doc) throws IOException {
+    public long index_doc(LumDocument lum_doc) throws IOException {
         Document idx_doc = new Document();        
         FieldType stored_ft = new FieldType();
         idx_doc.add(new Field("class", lum_doc.GetDocClass(), FieldTypeFactory.Get(FTEnum.SimpleIndex)));
-        idx_doc.add(new Field("type", lum_doc.GetDocType(), FieldTypeFactory.Get(FTEnum.SimpleIndex)));
-        
+        idx_doc.add(new Field("type", lum_doc.GetDocType(), FieldTypeFactory.Get(FTEnum.RawIndex)));
+        idx_doc.add(new Field("timestamp", lum_doc.GetTimestamp(), FieldTypeFactory.Get(FTEnum.RawIndex)));
         if (lum_doc.GetBaseRef().length() > 0){
-            idx_doc.add(new Field("baseref", lum_doc.GetBaseRef(), FieldTypeFactory.Get(FTEnum.SimpleIndex)));
+            idx_doc.add(new Field("baseref", lum_doc.GetBaseRef(), FieldTypeFactory.Get(FTEnum.RawIndex)));
         }
         
         if(lum_doc.GetDocType().equals(LumDocument.ANNO)){
@@ -54,7 +54,7 @@ public class LumIndexer {
             idx_doc.add(new Field("content", lum_doc.GetContent(), FieldTypeFactory.Get(FTEnum.FullIndex)));
         }
         
-        idx_writer.addDocument(idx_doc);
+        return idx_writer.addDocument(idx_doc);
     }
     
     public void close() throws IOException {
