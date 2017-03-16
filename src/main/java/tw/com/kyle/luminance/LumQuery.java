@@ -80,7 +80,7 @@ public class LumQuery {
         
         SpanQuery sq = null;
         if(!useNearQuery){
-            sq = new SpanTermQuery(new Term(field, term.substring(0, 1)));        
+            sq = new SpanTermQuery(new Term(field, term));        
         } else {
         
             SpanNearQuery.Builder builder = new SpanNearQuery.Builder(field, true);
@@ -101,7 +101,7 @@ public class LumQuery {
             }
             int nxtDoc = 0;
             while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {                
-                String doc_content = searcher.doc(nxtDoc).get("content");
+                String doc_content = searcher.doc(nxtDoc).get(field);
                 
                 List<int[]> tup_list = new ArrayList<>();
                 while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {                                        
@@ -111,7 +111,7 @@ public class LumQuery {
                 }        
                 
                 TokenStream tokenStream = TokenSources.getTermVectorTokenStreamOrNull(
-                        "content", 
+                        field, 
                         idx_reader.getTermVectors(nxtDoc), -1);
                 OffsetAttribute offsetAttr = tokenStream.getAttribute(OffsetAttribute.class);
                 PositionIncrementAttribute posincAttr = tokenStream.getAttribute(PositionIncrementAttribute.class);
