@@ -6,12 +6,15 @@
 package tw.com.kyle.luminance;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntFunction;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
 import org.apache.lucene.document.Document;
@@ -100,8 +103,12 @@ public class LumQuery {
                 continue;
             }
             int nxtDoc = 0;
+            
             while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {                
                 String doc_content = searcher.doc(nxtDoc).get(field);
+                                                                
+                IntFunction<Integer> min_guard = (int x)->Math.max(0, x-3);
+                IntFunction<Integer> max_guard = (int x)->Math.min(doc_content.length()-1, x);
                 
                 List<int[]> tup_list = new ArrayList<>();
                 while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {                                        
@@ -116,6 +123,8 @@ public class LumQuery {
                 OffsetAttribute offsetAttr = tokenStream.getAttribute(OffsetAttribute.class);
                 PositionIncrementAttribute posincAttr = tokenStream.getAttribute(PositionIncrementAttribute.class);
                 PositionLengthAttribute poslenAttr = tokenStream.getAttribute(PositionLengthAttribute.class);
+                PayloadAttribute payAttr = tokenStream.getAttribute(PayloadAttribute.class);
+                
                 int pos_counter = 0;
                 int last_token_end = -1; // a work-around for filtered token
                 int[] offset_pair = {-1, -1};
@@ -128,15 +137,16 @@ public class LumQuery {
                     
                     last_token_end = offsetAttr.endOffset();
                     pos_counter += posincAttr.getPositionIncrement();
-                    
+
                     if (offset_pair[0] >= 0 && offset_pair[1] >= 0){
-                        int so = offset_pair[0];
-                        int eo = offset_pair[1];
-                    
+                        ByteBuffer bbuf = ByteBuffer.wrap(payAttr.getPayload().bytes);                        
+                        int so = bbuf.getInt();
+                        int eo = bbuf.getInt();
+                                                                    
                         System.out.printf("%s - %s - %s %n", 
-                            doc_content.substring(Math.max(0, so - 3), so),
-                            doc_content.substring(so, eo),
-                            doc_content.substring(eo, Math.min(doc_content.length()-1, eo + 3)));
+                            doc_content.substring(min_guard.apply(so - 3), max_guard.apply(so)),
+                            doc_content.substring(min_guard.apply(so), max_guard.apply(eo)),
+                            doc_content.substring(min_guard.apply(eo), max_guard.apply(eo + 3)));
                         
                         offset_pair[0] = -1; offset_pair[1] = -1;
                     }                    

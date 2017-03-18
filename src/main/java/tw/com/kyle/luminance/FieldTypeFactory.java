@@ -49,6 +49,7 @@ public class FieldTypeFactory {
         ftype.setStoreTermVectors(true);
         ftype.setStoreTermVectorOffsets(true);
         ftype.setStoreTermVectorPositions(true);
+        ftype.setStoreTermVectorPayloads(true);
         
         return ftype;
     }

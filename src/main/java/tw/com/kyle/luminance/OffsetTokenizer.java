@@ -6,13 +6,15 @@
 package tw.com.kyle.luminance;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.nio.ByteBuffer;
 import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.payloads.PayloadHelper;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
+import org.apache.lucene.util.BytesRef;
 
 /**
  *
@@ -22,9 +24,10 @@ public class OffsetTokenizer extends Tokenizer {
     private final CharTermAttribute charAttr = addAttribute(CharTermAttribute.class);;
     private final OffsetAttribute offsetAttr = addAttribute(OffsetAttribute.class);
     private final PositionIncrementAttribute posIncAttr = addAttribute(PositionIncrementAttribute.class);
-    private final PositionLengthAttribute posLenAttr = addAttribute(PositionLengthAttribute.class);
+    private final PositionLengthAttribute posLenAttr = addAttribute(PositionLengthAttribute.class);    
     private final PayloadAttribute payAttr = addAttribute(PayloadAttribute.class);
     private int index = 0;
+    private boolean is_head = true;
     
     public OffsetTokenizer(){          
     }
@@ -64,12 +67,17 @@ public class OffsetTokenizer extends Tokenizer {
         String[] toks = strbuf.split(",");        
         int s_off_raw = Integer.parseInt(toks[0]);
         int e_off_raw = Integer.parseInt(toks[1]);
+        ByteBuffer bbuf = ByteBuffer.allocate(8);
+        bbuf.putInt(s_off_raw);
+        bbuf.putInt(e_off_raw);                
         String tag = toks[2].trim();
         
         charAttr.setEmpty().append(tag);
         offsetAttr.setOffset(correctOffset(so), correctOffset(eo));        
         posIncAttr.setPositionIncrement(1);
-        posLenAttr.setPositionLength(1);
+        posLenAttr.setPositionLength(1);   
+        BytesRef bref = new BytesRef(bbuf.array());
+        payAttr.setPayload(bref);
         
     }
     
@@ -78,6 +86,7 @@ public class OffsetTokenizer extends Tokenizer {
         super.end();
         final int ofs = correctOffset(index);
         offsetAttr.setOffset(ofs, ofs);
+        posLenAttr.setPositionLength(0);
     }
 
     @Override
@@ -92,6 +101,7 @@ public class OffsetTokenizer extends Tokenizer {
     @Override
     public void reset() throws IOException {
         super.reset();
+        is_head = true;
         index = 0;
     }
 }
