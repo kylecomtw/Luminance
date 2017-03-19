@@ -110,6 +110,7 @@ public class LumQuery {
                 LumWindow lumWin = new LumWindow(base_uuid, idx_reader);
                 while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {                                        
                     int[] span_arr = {spans.startPosition(), spans.endPosition()};
+                    
                     tup_list.add(span_arr);
                     System.out.printf("%d, %d, %d%n", nxtDoc, span_arr[0], span_arr[1]); 
                     System.out.printf("%s%n", lumWin.GetWindow(5, span_arr[0], span_arr[1]));

@@ -70,6 +70,7 @@ public class OffsetTokenizer extends Tokenizer {
         String tag = toks[2].trim();
         
         charAttr.setEmpty().append(tag);        
+        offsetAttr.setOffset(s_pos, e_pos);
         posIncAttr.setPositionIncrement(1);
         posLenAttr.setPositionLength(1);                   
     }
