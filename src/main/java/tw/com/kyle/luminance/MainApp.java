@@ -19,8 +19,9 @@ import org.apache.lucene.queryparser.classic.ParseException;
  */
 public class MainApp {
     public static void main(String[] args) {
-        try{
+        try{            
             Map<String, String> props = PropLoader.Load();            
+            clear(props);
             if (args.length == 0) {                
                 index(props);
                 query(props);
@@ -58,6 +59,17 @@ public class MainApp {
         // lum_query.query("三國");
         lum_query.span_query(props.get("query_str"), "anno", false);
         // System.out.println(lum_query.getTermFreq("學"));
+    }
+    
+    private static void clear(Map<String, String> props) throws IOException {
+        if (!Files.exists(Paths.get(props.get("index_dir")))) return;
+        DirectoryStream<Path> stream = Files.newDirectoryStream(
+                                        Paths.get(props.get("index_dir")));
+        for(Path path: stream){
+            Files.delete(path);
+        }
+        
+        // Files.delete(Paths.get(props.get("index_dir")));
     }
 
 }

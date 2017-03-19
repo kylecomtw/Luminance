@@ -65,20 +65,13 @@ public class OffsetTokenizer extends Tokenizer {
     
     private void setup_token(String strbuf, int so, int eo){
         String[] toks = strbuf.split(",");        
-        int s_off_raw = Integer.parseInt(toks[0]);
-        int e_off_raw = Integer.parseInt(toks[1]);
-        ByteBuffer bbuf = ByteBuffer.allocate(8);
-        bbuf.putInt(s_off_raw);
-        bbuf.putInt(e_off_raw);                
+        int s_pos = Integer.parseInt(toks[0].trim());
+        int e_pos = Integer.parseInt(toks[1].trim());             
         String tag = toks[2].trim();
         
-        charAttr.setEmpty().append(tag);
-        offsetAttr.setOffset(correctOffset(so), correctOffset(eo));        
+        charAttr.setEmpty().append(tag);        
         posIncAttr.setPositionIncrement(1);
-        posLenAttr.setPositionLength(1);   
-        BytesRef bref = new BytesRef(bbuf.array());
-        payAttr.setPayload(bref);
-        
+        posLenAttr.setPositionLength(1);                   
     }
     
     @Override

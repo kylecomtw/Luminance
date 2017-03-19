@@ -129,14 +129,37 @@ public class TextUtils {
         List<String> atxt = new ArrayList<>();
         
         int last_pos = 0;
+        List<Integer> pos_list = new ArrayList<>();
+        
         for(int i = 0; i < annot_list.size(); i++){
             String term = annot_list.get(i)[0];
             String tag = annot_list.get(i)[1];
-            int pos = pos_map.FindPosition(term.substring(0, 1), last_pos);
-            if(pos < 0) continue;
+            if (term.length() == 0) continue;
             
-            atxt.add(String.format("(%s, %d, %d)", tag, pos, pos+term.length()));
+            if (term.contains("@")){
+                last_pos = Integer.parseInt(term.substring(term.indexOf('@')));
+            }
+            
+            int slop = 3;
+            for(int t = 0; t < term.length(); ++t){
+                int pos = pos_map.FindPosition(term.substring(t, t+1), last_pos);                
+                if(pos >= 0 && pos - last_pos <= slop) {
+                    last_pos = pos;                    
+                    pos_list.add(pos);
+                } else {
+                    pos_list.clear();
+                    break;                    
+                }                                
+            }
+                        
+            if (pos_list.size() > 0 && pos_list.size() == term.length()){
+                int spos = pos_list.stream().min((Integer x, Integer y) -> x-y).get();
+                int epos = pos_list.stream().max((Integer x, Integer y) -> x-y).get();
+                atxt.add(String.format("(%d,%d,%s)", spos, epos + 1, tag));
+                pos_list.clear();
+            }
         }
+        
         return atxt;
     }
 }

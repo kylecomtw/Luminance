@@ -23,7 +23,7 @@ public class FieldTypeFactory {
             case RawIndex:
                 return getIndexedRawFieldType();
             case RawStoredIndex:
-                return getIndexedRawFieldType();
+                return getIndexedRawStoredFieldType();
             default:
                 return getSimpleIndexFieldType();
         }

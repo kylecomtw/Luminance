@@ -58,10 +58,11 @@ public class LumDocumentChain {
         return lum_doc;
     }       
     
-    public LumDocument add_segmentation(String atxt, IndexReader reader, long doc_id, String field){
+    public LumDocument add_segmentation(String atxt, IndexReader reader, long doc_uuid, String field){
         
         LumPositionMap pos_map = null;
         try{
+            int doc_id = query_doc_id(reader, doc_uuid);
             pos_map = LumPositionMap.Get(reader, doc_id, field);
         } catch (IOException ex){
             Logger.getLogger(LumDocumentChain.class.getName()).log(Level.SEVERE, null, ex);
@@ -79,10 +80,11 @@ public class LumDocumentChain {
         return lum_doc;
     }
             
-    public LumDocument add_pos_tag(String atxt, IndexReader reader, long doc_id, String field){
+    public LumDocument add_pos_tag(String atxt, IndexReader reader, long doc_uuid, String field){
         
         LumPositionMap pos_map = null;
-        try{
+        try{            
+            int doc_id = query_doc_id(reader, doc_uuid);
             pos_map = LumPositionMap.Get(reader, doc_id, field);
         } catch (IOException ex){
             Logger.getLogger(LumDocumentChain.class.getName()).log(Level.SEVERE, null, ex);
@@ -91,7 +93,7 @@ public class LumDocumentChain {
         
         List<String> annot_in = TextUtils.make_annotation_format(
                     pos_map,
-                    TextUtils.extract_seg_annot(atxt));
+                    TextUtils.extract_pos_annot(atxt));
                         
         LumDocument lum_doc = new LumDocument();
         lum_doc.SetDocType(LumDocument.ANNO);
@@ -108,7 +110,7 @@ public class LumDocumentChain {
             switch(ar.annot_type){
                 case RAW:
                     doc = add_text(ar.annot_text);                    
-                    base_doc_id = (int)indexer.index_doc(doc);
+                    base_doc_id = indexer.index_doc(doc);
                     indexer.reset();
                     break;
                 case SEG:
@@ -132,7 +134,7 @@ public class LumDocumentChain {
         indexer.flush();
     }
     
-    private int queryDocId(IndexReader reader, long uuid) throws IOException{
+    private int query_doc_id(IndexReader reader, long uuid) throws IOException{
         ByteBuffer buf = ByteBuffer.allocate(Long.BYTES);
         buf.putLong(uuid);
         TermQuery q = new TermQuery(new Term("uuid", new BytesRef(buf.array())));
