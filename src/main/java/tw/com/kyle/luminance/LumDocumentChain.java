@@ -74,7 +74,8 @@ public class LumDocumentChain {
                 TextUtils.extract_seg_annot(atxt));
         
         LumDocument lum_doc = new LumDocument();        
-        lum_doc.SetDocType(LumDocument.ANNO);        
+        lum_doc.SetDocType(LumDocument.ANNO);  
+        lum_doc.SetBaseRef(Long.toHexString(doc_uuid));
         lum_doc.SetContent(String.join("\n", annot_in));
         
         return lum_doc;
@@ -97,6 +98,7 @@ public class LumDocumentChain {
                         
         LumDocument lum_doc = new LumDocument();
         lum_doc.SetDocType(LumDocument.ANNO);
+        lum_doc.SetBaseRef(Long.toHexString(doc_uuid));
         lum_doc.SetContent(String.join("\n", annot_in));
         
         return lum_doc;
@@ -116,14 +118,12 @@ public class LumDocumentChain {
                 case SEG:
                     ir = LumIndexer.GetReader(indexer);
                     doc = add_segmentation(ar.annot_text, ir, base_doc_id, "content");
-                    doc.SetBaseRef(Long.toString(base_doc_id));
                     indexer.index_doc(doc);
                     ir.close();
                     break;
                 case POS:
                     ir = LumIndexer.GetReader(indexer);
-                    doc = add_pos_tag(ar.annot_text, ir, base_doc_id, "content");
-                    doc.SetBaseRef(Long.toString(base_doc_id));                    
+                    doc = add_pos_tag(ar.annot_text, ir, base_doc_id, "content");                 
                     indexer.index_doc(doc);
                     ir.close();
                     break;

@@ -11,12 +11,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntFunction;
-import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
-import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
-import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
-import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -31,7 +26,6 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.highlight.TokenSources;
 import org.apache.lucene.search.spans.SpanNearQuery;
 import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
@@ -40,6 +34,7 @@ import org.apache.lucene.search.spans.SpanWeight.Postings;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 
 /**
  *
@@ -106,51 +101,20 @@ public class LumQuery {
             
             while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {                
                 String doc_content = searcher.doc(nxtDoc).get(field);
-                                                                
+                String base_ref = searcher.doc(nxtDoc).get("baseref");
+                long base_uuid = Long.parseLong(base_ref, 16);
                 IntFunction<Integer> min_guard = (int x)->Math.max(0, x-3);
                 IntFunction<Integer> max_guard = (int x)->Math.min(doc_content.length()-1, x);
                 
                 List<int[]> tup_list = new ArrayList<>();
+                LumWindow lumWin = new LumWindow(base_uuid, idx_reader);
                 while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {                                        
                     int[] span_arr = {spans.startPosition(), spans.endPosition()};
                     tup_list.add(span_arr);
                     System.out.printf("%d, %d, %d%n", nxtDoc, span_arr[0], span_arr[1]); 
-                }        
+                    System.out.printf("%s%n", lumWin.GetWindow(5, span_arr[0], span_arr[1]));
+                }                                              
                 
-                TokenStream tokenStream = TokenSources.getTermVectorTokenStreamOrNull(
-                        field, 
-                        idx_reader.getTermVectors(nxtDoc), -1);
-                OffsetAttribute offsetAttr = tokenStream.getAttribute(OffsetAttribute.class);
-                PositionIncrementAttribute posincAttr = tokenStream.getAttribute(PositionIncrementAttribute.class);
-                PositionLengthAttribute poslenAttr = tokenStream.getAttribute(PositionLengthAttribute.class);
-                PayloadAttribute payAttr = tokenStream.getAttribute(PayloadAttribute.class);
-                
-                int pos_counter = 0;
-                int last_token_end = -1; // a work-around for filtered token
-                int[] offset_pair = {-1, -1};
-                while(tokenStream.incrementToken()){                    
-                    final int cur_pos = pos_counter;                                        
-                    boolean spos_matched = tup_list.stream().map((x) -> x[0] == cur_pos).anyMatch((y)->y);
-                    boolean epos_matched = tup_list.stream().map((x) -> x[1] == cur_pos).anyMatch((y)->y);
-                    if (spos_matched) offset_pair[0] = offsetAttr.startOffset();
-                    if (epos_matched) offset_pair[1] = last_token_end;
-                    
-                    last_token_end = offsetAttr.endOffset();
-                    pos_counter += posincAttr.getPositionIncrement();
-
-                    if (offset_pair[0] >= 0 && offset_pair[1] >= 0){
-                        ByteBuffer bbuf = ByteBuffer.wrap(payAttr.getPayload().bytes);                        
-                        int so = bbuf.getInt();
-                        int eo = bbuf.getInt();
-                                                                    
-                        System.out.printf("%s - %s - %s %n", 
-                            doc_content.substring(min_guard.apply(so - 3), max_guard.apply(so)),
-                            doc_content.substring(min_guard.apply(so), max_guard.apply(eo)),
-                            doc_content.substring(min_guard.apply(eo), max_guard.apply(eo + 3)));
-                        
-                        offset_pair[0] = -1; offset_pair[1] = -1;
-                    }                    
-                }
             }
         }
 

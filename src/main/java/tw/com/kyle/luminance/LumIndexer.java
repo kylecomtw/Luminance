@@ -77,7 +77,7 @@ public class LumIndexer {
         idx_doc.add(new Field("type", lum_doc.GetDocType(), FieldTypeFactory.Get(FTEnum.RawIndex)));
         idx_doc.add(new Field("timestamp", lum_doc.GetTimestamp(), FieldTypeFactory.Get(FTEnum.RawIndex)));
         if (lum_doc.GetBaseRef().length() > 0){
-            idx_doc.add(new Field("baseref", lum_doc.GetBaseRef(), FieldTypeFactory.Get(FTEnum.RawIndex)));
+            idx_doc.add(new Field("baseref", lum_doc.GetBaseRef(), FieldTypeFactory.Get(FTEnum.RawStoredIndex)));
         }
         
         if(lum_doc.GetDocType().equals(LumDocument.ANNO)){
