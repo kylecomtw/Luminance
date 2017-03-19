@@ -6,11 +6,11 @@
 package tw.com.kyle.luminance;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
-import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.search.highlight.TokenSources;
@@ -25,40 +25,44 @@ public class LumPositionMap {
         List<Integer> pos_list = null;
     }
     
-    private IndexReader reader = null;
-    public LumPositionMap(IndexReader r) {
-        reader = r;
+    private LumPositionMap(List<String> t, List<Integer> p) {
+        pos_info = new PosInfo();
+        pos_info.tokens = t;
+        pos_info.pos_list = p;
     }
     
-    public PosInfo GetPositions(int doc_id, String field) throws IOException {
+    private PosInfo pos_info = null;
+    
+    public static LumPositionMap Get(IndexReader reader, int doc_id, String field) throws IOException {
         Terms terms = reader.getTermVector(doc_id, field);
         TokenStream tstream = TokenSources.getTermVectorTokenStreamOrNull(
-                field, reader.getTermVectors(doc_id), -1);
-        PosInfo pos_info = new PosInfo();
-        
+                field, reader.getTermVectors(doc_id), -1);        
+                        
         CharTermAttribute termAttr = tstream.getAttribute(CharTermAttribute.class);
         PositionIncrementAttribute posIncAttr = tstream.getAttribute(PositionIncrementAttribute.class);
         // PositionLengthAttribute posLenAttr = tstream.getAttribute(PositionLengthAttribute.class);
         
+        List<String> tokens = new ArrayList<>();
+        List<Integer> pos_list = new ArrayList<>();
+        
         int pos_counter = 0;
         while(tstream.incrementToken()){
-            pos_info.tokens.add(termAttr.toString());
-            pos_info.pos_list.add(pos_counter);
+            tokens.add(termAttr.toString());
+            pos_list.add(pos_counter);
             pos_counter += posIncAttr.getPositionIncrement();
         }
         
-        return pos_info;        
+        return new LumPositionMap(tokens, pos_list);
     }
         
-    public int FindPosition(PosInfo pos_info, String term, int start){
+    public int FindPosition(String term, int start){
         List<String> tokens = pos_info.tokens;                
         int idx = tokens.subList(start, tokens.size()).indexOf(term);
         if (idx >= 0) {
-            return idx + start;
+            return pos_info.pos_list.get(start + idx);
         } else {
-            return idx;            
+            return idx;
         }        
     }
-    
-    
+        
 }

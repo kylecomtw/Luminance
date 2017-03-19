@@ -13,7 +13,7 @@ import org.apache.lucene.index.IndexOptions;
  * @author Sean_S325
  */
 public class FieldTypeFactory {
-    public enum FTEnum {FullIndex, SimpleIndex, RawIndex}
+    public enum FTEnum {FullIndex, SimpleIndex, RawIndex, RawStoredIndex}
     public static FieldType Get(FTEnum ft){
         switch (ft){
             case FullIndex:
@@ -21,6 +21,8 @@ public class FieldTypeFactory {
             case SimpleIndex:
                 return getSimpleIndexFieldType();                
             case RawIndex:
+                return getIndexedRawFieldType();
+            case RawStoredIndex:
                 return getIndexedRawFieldType();
             default:
                 return getSimpleIndexFieldType();
@@ -31,6 +33,14 @@ public class FieldTypeFactory {
         FieldType raw_ft = new FieldType();
         raw_ft.setTokenized(false);
         raw_ft.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+        return raw_ft;
+    }
+    
+    private static FieldType getIndexedRawStoredFieldType(){
+        FieldType raw_ft = new FieldType();
+        raw_ft.setTokenized(false);
+        raw_ft.setStored(true);
+        raw_ft.setIndexOptions(IndexOptions.DOCS);
         return raw_ft;
     }
     

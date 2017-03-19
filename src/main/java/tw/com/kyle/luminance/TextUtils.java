@@ -59,8 +59,8 @@ public class TextUtils {
         return buf.toString();
     }
     
-    public static List<String> extract_seg_annot(String intxt) {
-        List<String> annot_list = new ArrayList<>();        
+    public static List<String[]> extract_seg_annot(String intxt) {
+        List<String[]> annot_list = new ArrayList<>();        
         String buf = "";
         int offset_counter = 0;
         boolean ignore_ch = false;
@@ -71,7 +71,7 @@ public class TextUtils {
             } else if (ch.equals(")")){
                 ignore_ch = false;
             } else if (ch.equals("\u3000")) {
-                annot_list.add(String.format("(%d,%d,%s)", offset_counter - buf.length(), offset_counter, buf));
+                annot_list.add(new String[]{buf, buf});                
                 buf = "";
             } else if (ch.equals("\r") || ch.equals("\n") || ch.equals("\t") || ch.equals(" ")) {
                 //! pass
@@ -83,44 +83,60 @@ public class TextUtils {
         }
         
         if(buf.length() > 0){
-            annot_list.add(String.format("(%d,%d,%s)", offset_counter - buf.length(), offset_counter, buf));
+            annot_list.add(new String[]{buf, ""}); 
             buf = "";
         }
         
         return annot_list;
     }
     
-    public static List<String> extract_pos_annot(String intxt) {
-        List<String> annot_list = new ArrayList<>();        
-        String buf = "";
-        int offset_counter = 0;
+    public static List<String[]> extract_pos_annot(String intxt) {
+        List<String[]> annot_list = new ArrayList<>();        
+        String tag_buf = "";
+        String ch_buf = "";
         boolean in_tag = false;
         for(int i = 0; i < intxt.length(); i++){
             String ch = intxt.substring(i, i+1);            
-            if (ch.equals("(")){
+            if (ch.equals("(")){                            
                 in_tag = true;
             } else if (ch.equals(")")){
-                annot_list.add(String.format("(%d,%d,%s)", offset_counter - 1, offset_counter, buf));
-                buf = "";
+                annot_list.add(new String[]{ch_buf, tag_buf});                 
+                ch_buf = ""; tag_buf = "";
                 in_tag = false;
-            } else if (ch.equals("\u3000")) {
-                offset_counter += 1;
+            } else if (ch.equals("\u3000")) {                
+                // pass
             } else if (ch.equals("\r") || ch.equals("\n") || ch.equals("\t") || ch.equals(" ")) {
                 //! pass
             } else {
                 if(in_tag){
-                    buf += ch;
+                    tag_buf += ch;
                 } else {
-                    // pass
-                }
+                    ch_buf += ch;
+                }                
             }
         }
         
-        if(buf.length() > 0){
-            annot_list.add(String.format("(%d,%d,%s)", offset_counter - 1, offset_counter, buf));
-            buf = "";
+        if(tag_buf.length() > 0){
+            annot_list.add(new String[]{ch_buf, tag_buf});  
+            tag_buf = "";
+            ch_buf = "";
         }
         
         return annot_list;
+    }
+    
+    public static List<String> make_annotation_format(LumPositionMap pos_map, List<String[]> annot_list) {
+        List<String> atxt = new ArrayList<>();
+        
+        int last_pos = 0;
+        for(int i = 0; i < annot_list.size(); i++){
+            String term = annot_list.get(i)[0];
+            String tag = annot_list.get(i)[1];
+            int pos = pos_map.FindPosition(term.substring(0, 1), last_pos);
+            if(pos < 0) continue;
+            
+            atxt.add(String.format("(%s, %d, %d)", tag, pos, pos+term.length()));
+        }
+        return atxt;
     }
 }
