@@ -6,15 +6,12 @@
 package tw.com.kyle.luminance;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.IntFunction;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
 import org.apache.lucene.index.Term;
@@ -87,9 +84,10 @@ public class LumQuery {
             }        
             sq = builder.build();
         }
-        
+            
         IndexSearcher searcher = new IndexSearcher(idx_reader);
-        for (LeafReaderContext ctx : idx_reader.leaves()) {
+        for (LeafReaderContext ctx : idx_reader.leaves()) {                        
+            
             SpanWeight weights = sq.createWeight(searcher, false);
             if(weights == null) continue;
             Spans spans = weights.getSpans(ctx, Postings.POSITIONS);
@@ -99,19 +97,25 @@ public class LumQuery {
             }
             int nxtDoc = 0;
             
-            while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {                
-                String doc_content = searcher.doc(nxtDoc).get(field);
-                String base_ref = searcher.doc(nxtDoc).get("baseref");
-                long base_uuid = Long.parseLong(base_ref, 16);
-                IntFunction<Integer> min_guard = (int x)->Math.max(0, x-3);
-                IntFunction<Integer> max_guard = (int x)->Math.min(doc_content.length()-1, x);
+            LeafReader leaf_reader = ctx.reader();
+            while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {     
                 
-                List<int[]> tup_list = new ArrayList<>();
-                LumWindow lumWin = new LumWindow(base_uuid, idx_reader);
+                String doc_content = leaf_reader.document(nxtDoc).get(field);                
+                Document targ_doc = leaf_reader.document(nxtDoc);
+                String base_ref = leaf_reader.document(nxtDoc).get("baseref");                
+                
+                long base_uuid = 0;
+                LumWindow lumWin = null;
+                if (base_ref == null){                    
+                    lumWin = new LumWindow(targ_doc, idx_reader);
+                } else {
+                    base_uuid = Long.parseLong(base_ref, 16);
+                    lumWin = new LumWindow(targ_doc, base_uuid, idx_reader);
+                }
+
                 while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {                                        
                     int[] span_arr = {spans.startPosition(), spans.endPosition()};
-                    
-                    tup_list.add(span_arr);
+
                     System.out.printf("%d, %d, %d%n", nxtDoc, span_arr[0], span_arr[1]); 
                     System.out.printf("%s%n", lumWin.GetWindow(5, span_arr[0], span_arr[1]));
                 }                                              
