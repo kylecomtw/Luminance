@@ -13,46 +13,79 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.lucene.document.DateTools;
+import org.apache.lucene.document.DateTools.Resolution;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.util.BytesRef;
+import tw.com.kyle.luminance.FieldTypeFactory;
+import tw.com.kyle.luminance.LumIndexer;
+import tw.com.kyle.luminance.FieldTypeFactory.FTEnum;
 
 /**
  *
  * @author Sean
  */
-public class PttJsonAdaptor {
+public class PttJsonAdaptor implements LumIndexInterface {
+
     public class PttComment {
-        public String author;
-        public int valence;
-        public String comment;
+        public String author = "";
+        public char valence = '0';
+        public String comment = "";
     }
-    public PttJsonAdaptor(){}
     
-    public void Parse(String injsonpath) throws IOException{        
+    public class PttArticle {
+        public String author = "";
+        public String title = "";
+        public String postTime = "";
+        public String content = "";
+        public String url = "";
+        public List<PttComment> comments = null;
+    }
+    
+    
+    private Logger logger = Logger.getLogger(PttJsonAdaptor.class.getName());
+    public PttJsonAdaptor(){}       
+    
+    public List<PttArticle> Parse(String injsonpath) throws IOException{        
         String json_content = String.join("\n", Files.readAllLines(
-                                Paths.get(injsonpath), StandardCharsets.UTF_8));
+                                Paths.get(injsonpath), StandardCharsets.UTF_8));        
         JsonElement root = new JsonParser().parse(json_content);
         JsonArray rarray = root.getAsJsonArray();
+        List<PttArticle> art_list = new ArrayList<PttArticle>();
         for (JsonElement elem: rarray){
             JsonObject art_x = elem.getAsJsonObject();
-            String art_content = art_x.get("content").getAsString();
-            String title = art_x.get("title").getAsString();
-            String author = art_x.get("author").getAsString();
-            String url = art_x.get("URL").getAsString();
-            List<String> comments = get_comments_from_json(art_x.getAsJsonObject("comments"));            
+            PttArticle art = new PttArticle();
+            art.content = art_x.get("content").getAsString();
+            art.title = art_x.get("title").getAsString();
+            art.author = art_x.get("author").getAsString();
+            art.url = art_x.get("URL").getAsString();
+            art.comments = get_comments_from_json(art_x.getAsJsonObject("comments"));                        
+            art_list.add(art);
         }
-        return;
+        
+        logger.info(String.format("Processing %d PttArticle in %s", art_list.size(), injsonpath));
+        return art_list;
     }
     
-    private List<String> get_comments_from_json(JsonObject com_json){
+    private List<PttComment> get_comments_from_json(JsonObject com_json){
         JsonArray push_arr = com_json.getAsJsonArray("push");
         JsonArray boo_arr = com_json.getAsJsonArray("boo");
         JsonArray arrow_arr = com_json.getAsJsonArray("arrow");
         
         class Extract_comment implements Function<JsonArray, List<PttComment>>{
-            private int valence = 0;
-            public Extract_comment(int val) {
+            private char valence = 0;
+            public Extract_comment(char val) {
                 valence = val;
             }
             @Override
@@ -71,9 +104,58 @@ public class PttJsonAdaptor {
         }
                 
         List<PttComment> comments = new ArrayList<>();
-        comments.addAll(new Extract_comment(1).apply(push_arr));
-        comments.addAll(new Extract_comment(-1).apply(boo_arr));
-        comments.addAll(new Extract_comment(0).apply(arrow_arr));
-        return new ArrayList<String>();
+        comments.addAll(new Extract_comment('+').apply(push_arr));
+        comments.addAll(new Extract_comment('-').apply(boo_arr));
+        comments.addAll(new Extract_comment('=').apply(arrow_arr));
+        return comments;
+    }
+    
+    @Override
+    public void Index(LumIndexer indexer, String inpath) throws IOException{        
+        List<PttArticle> art_list = Parse(inpath);
+        
+        if(art_list == null || art_list.isEmpty()) {
+            logger.warning("Failed to load for index " + inpath);
+            return;
+        }
+        
+        for(PttArticle art: art_list){
+            Document base_doc = indexer.CreateIndexDocument(LumIndexer.DOC_DISCOURSE);
+            indexer.AddField(base_doc, "author", art.author, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
+            indexer.AddField(base_doc, "title", art.title, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
+            indexer.AddField(base_doc, "timestamp", lucene_date_format(art.postTime), FieldTypeFactory.Get(FTEnum.RawStoredIndex));
+            indexer.AddField(base_doc, "url", art.url, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
+            indexer.AddField(base_doc, "content", art.content, FieldTypeFactory.Get(FTEnum.FullIndex));
+            
+            BytesRef base_doc_ref = indexer.GetUUIDAsBytesRef(base_doc);
+            indexer.AddToIndex(base_doc);
+            
+            for(PttComment com: art.comments){
+                Document com_doc_x = indexer.CreateIndexDocument(LumIndexer.DOC_FRAGMENT);
+                indexer.AddField(com_doc_x, "base_ref", base_doc_ref, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
+                indexer.AddField(com_doc_x, "author", com.author, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
+                indexer.AddField(com_doc_x, "content", com.comment, FieldTypeFactory.Get(FTEnum.FullIndex));
+                indexer.AddField(com_doc_x, "valence", String.valueOf(com.valence), FieldTypeFactory.Get(FTEnum.RawStoredIndex));
+                indexer.AddToIndex(com_doc_x);
+            }                                                        
+        }
+                
+    }
+    
+    private String lucene_date_format(String timestamp) {                    
+        String lum_date_str = null;
+        try {
+            DateFormat format = new SimpleDateFormat("yyyyMMdd");
+            lum_date_str = DateTools.dateToString(
+                                    format.parse(timestamp),
+                                    Resolution.DAY);            
+        } catch (ParseException ex) { 
+            Calendar cal = Calendar.getInstance();
+            cal.set(2010, 1, 1, 0, 0, 0);
+            lum_date_str = DateTools.dateToString(
+                                    cal.getTime(), Resolution.DAY);            
+        }
+        
+        return lum_date_str;                
     }
 }

@@ -12,6 +12,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import org.apache.lucene.queryparser.classic.ParseException;
+import org.xml.sax.SAXException;
+import tw.com.kyle.luminance.corpus.AppleLineDelimAdaptor;
+import tw.com.kyle.luminance.corpus.AsbcXmlAdaptor;
+import tw.com.kyle.luminance.corpus.LumIndexInterface;
 import tw.com.kyle.luminance.corpus.PttJsonAdaptor;
 
 /**
@@ -56,7 +60,7 @@ public class MainApp {
         for(Path path: stream) {
             System.out.println(path.getFileName());            
             lum.index(path, props);
-        }                   
+        }                           
     }
     
     private static void query(Map<String, String> props) throws IOException, ParseException {
@@ -77,16 +81,24 @@ public class MainApp {
         // Files.delete(Paths.get(props.get("index_dir")));
     }  
     
-    private static void import_corpus(Map<String, String> props) throws IOException {
+    private static void import_corpus(Map<String, String> props) 
+            throws IOException {
         final String CORPUS_PATH = "E:\\Kyle\\Corpus\\PTT\\data\\ask";
+        LumIndexInterface adaptor = new PttJsonAdaptor();
+        // final String CORPUS_PATH = "E:\\Kyle\\Corpus\\ASBC\\ASBC_A";
+        // AsbcXmlAdaptor adaptor = new AsbcXmlAdaptor();
+        // final String CORPUS_PATH = "E:\\Study\\16_Idioms\\20_Materials\\Apple_text";
+        // AppleLineDelimAdaptor adaptor = new AppleLineDelimAdaptor();
         if (!Files.exists(Paths.get(CORPUS_PATH))) return;
         DirectoryStream<Path> stream = Files.newDirectoryStream(
                                         Paths.get(CORPUS_PATH));
-        PttJsonAdaptor ptt_adaptor = new PttJsonAdaptor();
-        for(Path path: stream){
-            ptt_adaptor.Parse(path.toString());
-        }
         
+        LumIndexer indexer = new LumIndexer("h:/lum_index");
+        for(Path path: stream){                      
+            adaptor.Index(indexer, path.toString());
+            // break;
+        }
+        indexer.close();
     }
 
 }

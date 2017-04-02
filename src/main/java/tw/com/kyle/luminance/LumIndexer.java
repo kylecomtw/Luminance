@@ -19,6 +19,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 import tw.com.kyle.luminance.FieldTypeFactory.FTEnum;
 
 /**
@@ -28,6 +29,8 @@ import tw.com.kyle.luminance.FieldTypeFactory.FTEnum;
 public class LumIndexer {
     private IndexWriter idx_writer = null;
     private String index_dir = "";
+    public static final String DOC_DISCOURSE = "discourse";
+    public static final String DOC_FRAGMENT = "fragment";
     
     public String GetIndexDir() {return index_dir;}
     public static IndexReader GetReader(LumIndexer lum_idx) throws IOException {
@@ -88,6 +91,38 @@ public class LumIndexer {
         
         idx_writer.addDocument(idx_doc);
         return timestamp;
+    }
+    
+    public Document CreateIndexDocument(String doc_type) {
+        Document idx_doc = new Document();
+        long timestamp = System.nanoTime();
+        ByteBuffer buf = ByteBuffer.allocate(8);
+        buf.putLong(timestamp);
+        idx_doc.add(new Field("uuid", buf.array(), FieldTypeFactory.Get(FTEnum.RawStoredIndex)));        
+        idx_doc.add(new Field("class", doc_type, FieldTypeFactory.Get(FTEnum.RawStoredIndex)));        
+        return idx_doc;
+    }
+    
+    public long GetUUID(Document doc) {
+        BytesRef uuid = doc.getBinaryValue("uuid");
+        return LumUtils.BytesRefToLong(uuid);
+    }
+    
+    public BytesRef GetUUIDAsBytesRef(Document doc) {
+        BytesRef uuid = doc.getBinaryValue("uuid");
+        return uuid;
+    }
+    
+    public void AddField(Document idx_doc, String field_name, String content, FieldType ftype){
+        idx_doc.add(new Field(field_name, content, ftype));        
+    }
+    
+    public void AddField(Document idx_doc, String field_name, BytesRef bref, FieldType ftype){
+        idx_doc.add(new Field(field_name, bref, ftype));        
+    }
+    
+    public void AddToIndex(Document idx_doc) throws IOException {
+        idx_writer.addDocument(idx_doc);
     }
     
     public void close() throws IOException {

@@ -5,10 +5,13 @@
  */
 package tw.com.kyle.luminance.corpus;
 
+import java.io.IOException;
+import tw.com.kyle.luminance.LumIndexer;
+
 /**
  *
  * @author Sean
  */
-public class PttArticle {
-    
+public interface LumIndexInterface {
+    public void Index(LumIndexer indexer, String inpath) throws IOException;
 }
