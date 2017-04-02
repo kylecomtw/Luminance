@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import org.apache.lucene.queryparser.classic.ParseException;
+import tw.com.kyle.luminance.corpus.PttJsonAdaptor;
 
 /**
  *
@@ -23,13 +24,17 @@ public class MainApp {
             Map<String, String> props = PropLoader.Load();            
             clear(props);
             if (args.length == 0) {                
-                index(props);
-                query(props);
+                import_corpus(props);
+                // index(props);
+                // query(props);                
                 return;                
             }
             
             
             switch (args[0]) {
+                case "import":
+                    import_corpus(props);
+                    break;
                 case "index":
                     index(props);
                     break;
@@ -70,6 +75,18 @@ public class MainApp {
         }
         
         // Files.delete(Paths.get(props.get("index_dir")));
+    }  
+    
+    private static void import_corpus(Map<String, String> props) throws IOException {
+        final String CORPUS_PATH = "E:\\Kyle\\Corpus\\PTT\\data\\ask";
+        if (!Files.exists(Paths.get(CORPUS_PATH))) return;
+        DirectoryStream<Path> stream = Files.newDirectoryStream(
+                                        Paths.get(CORPUS_PATH));
+        PttJsonAdaptor ptt_adaptor = new PttJsonAdaptor();
+        for(Path path: stream){
+            ptt_adaptor.Parse(path.toString());
+        }
+        
     }
 
 }
