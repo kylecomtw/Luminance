@@ -16,13 +16,10 @@ import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.DateTools.Resolution;
@@ -57,7 +54,8 @@ public class PttJsonAdaptor implements LumIndexInterface {
     private Logger logger = Logger.getLogger(PttJsonAdaptor.class.getName());
     public PttJsonAdaptor(){}       
     
-    public List<PttArticle> Parse(String injsonpath) throws IOException{        
+    public List<PttArticle> Parse(String injsonpath) throws IOException{   
+        if(!injsonpath.endsWith(".json")) return new ArrayList<>();
         String json_content = String.join("\n", Files.readAllLines(
                                 Paths.get(injsonpath), StandardCharsets.UTF_8));        
         JsonElement root = new JsonParser().parse(json_content);
@@ -66,10 +64,11 @@ public class PttJsonAdaptor implements LumIndexInterface {
         for (JsonElement elem: rarray){
             JsonObject art_x = elem.getAsJsonObject();
             PttArticle art = new PttArticle();
-            art.content = art_x.get("content").getAsString();
+            art.content = sanitize_ptt_content(art_x.get("content").getAsString());
             art.title = art_x.get("title").getAsString();
             art.author = art_x.get("author").getAsString();
             art.url = art_x.get("URL").getAsString();
+            art.postTime = art_x.get("post_time").getAsString().substring(0, 8);
             art.comments = get_comments_from_json(art_x.getAsJsonObject("comments"));                        
             art_list.add(art);
         }
@@ -124,6 +123,8 @@ public class PttJsonAdaptor implements LumIndexInterface {
             indexer.AddField(base_doc, "author", art.author, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
             indexer.AddField(base_doc, "title", art.title, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
             indexer.AddField(base_doc, "timestamp", lucene_date_format(art.postTime), FieldTypeFactory.Get(FTEnum.RawStoredIndex));
+            indexer.AddField(base_doc, "dvTimestamp", lucene_date_format(art.postTime), FieldTypeFactory.Get(FTEnum.RawStoredIndex));
+            indexer.AddField(base_doc, "dvTimestamp", new BytesRef(lucene_date_format(art.postTime)), FieldTypeFactory.Get(FTEnum.TimestampIndex));
             indexer.AddField(base_doc, "url", art.url, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
             indexer.AddField(base_doc, "content", art.content, FieldTypeFactory.Get(FTEnum.FullIndex));
             
@@ -131,8 +132,8 @@ public class PttJsonAdaptor implements LumIndexInterface {
             indexer.AddToIndex(base_doc);
             
             for(PttComment com: art.comments){
-                Document com_doc_x = indexer.CreateIndexDocument(LumIndexer.DOC_FRAGMENT);
-                indexer.AddField(com_doc_x, "base_ref", base_doc_ref, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
+                Document com_doc_x = indexer.CreateIndexDocument(LumIndexer.DOC_FRAGMENT);                
+                indexer.AddField(com_doc_x, "base_ref", base_doc_ref, FieldTypeFactory.Get(FTEnum.RawStoredIndex));                
                 indexer.AddField(com_doc_x, "author", com.author, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
                 indexer.AddField(com_doc_x, "content", com.comment, FieldTypeFactory.Get(FTEnum.FullIndex));
                 indexer.AddField(com_doc_x, "valence", String.valueOf(com.valence), FieldTypeFactory.Get(FTEnum.RawStoredIndex));
@@ -157,5 +158,17 @@ public class PttJsonAdaptor implements LumIndexInterface {
         }
         
         return lum_date_str;                
+    }
+    
+    private String sanitize_ptt_content(String raw){
+        String[] lines = raw.split("\n");
+        StringBuilder sb = new StringBuilder();
+        for(String ln: lines) {
+            if (ln.startsWith(":"))
+                continue;
+            sb.append(ln); sb.append("\n");
+        }
+        
+        return sb.toString();
     }
 }

@@ -6,6 +6,7 @@
 package tw.com.kyle.luminance;
 
 import org.apache.lucene.document.FieldType;
+import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
 
 /**
@@ -13,7 +14,7 @@ import org.apache.lucene.index.IndexOptions;
  * @author Sean_S325
  */
 public class FieldTypeFactory {
-    public enum FTEnum {FullIndex, SimpleIndex, RawIndex, RawStoredIndex}
+    public enum FTEnum {FullIndex, SimpleIndex, RawIndex, RawStoredIndex, TimestampIndex}
     public static FieldType Get(FTEnum ft){
         switch (ft){
             case FullIndex:
@@ -24,6 +25,8 @@ public class FieldTypeFactory {
                 return getIndexedRawFieldType();
             case RawStoredIndex:
                 return getIndexedRawStoredFieldType();
+            case TimestampIndex:
+                return getTimestampFieldType();
             default:
                 return getSimpleIndexFieldType();
         }
@@ -41,6 +44,14 @@ public class FieldTypeFactory {
         raw_ft.setTokenized(false);
         raw_ft.setStored(true);
         raw_ft.setIndexOptions(IndexOptions.DOCS);
+        return raw_ft;
+    }
+    
+    private static FieldType getTimestampFieldType(){
+        FieldType raw_ft = new FieldType();
+        raw_ft.setStored(true);
+        raw_ft.setDocValuesType(DocValuesType.SORTED);
+        raw_ft.freeze();
         return raw_ft;
     }
     

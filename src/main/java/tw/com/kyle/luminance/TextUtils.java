@@ -162,4 +162,24 @@ public class TextUtils {
         
         return atxt;
     }
+    
+    public static Boolean checkCJK(char ch){
+        int cp = (int)ch;
+        //! ignore all ideographs not in BMP
+        if (cp >= 0x4e00 && cp <= 0x9fff || 
+            cp >= 0xf900 && cp <= 0xfaff ||
+            cp >= 0x3400 && cp <= 0x4dbf) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    public static Boolean checkCJK(String str) {
+        for(char ch: str.toCharArray()){
+            if(!checkCJK(ch)) return false;
+        }
+        
+        return true;
+    }
 }
