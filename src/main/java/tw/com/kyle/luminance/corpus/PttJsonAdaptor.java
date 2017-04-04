@@ -121,10 +121,9 @@ public class PttJsonAdaptor implements LumIndexInterface {
         for(PttArticle art: art_list){
             Document base_doc = indexer.CreateIndexDocument(LumIndexer.DOC_DISCOURSE);
             indexer.AddField(base_doc, "author", art.author, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
-            indexer.AddField(base_doc, "title", art.title, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
+            indexer.AddField(base_doc, "title", art.title, FieldTypeFactory.Get(FTEnum.RawStoredIndex));            
             indexer.AddField(base_doc, "timestamp", lucene_date_format(art.postTime), FieldTypeFactory.Get(FTEnum.RawStoredIndex));
-            indexer.AddField(base_doc, "dvTimestamp", lucene_date_format(art.postTime), FieldTypeFactory.Get(FTEnum.RawStoredIndex));
-            indexer.AddField(base_doc, "dvTimestamp", new BytesRef(lucene_date_format(art.postTime)), FieldTypeFactory.Get(FTEnum.TimestampIndex));
+            indexer.AddField(base_doc, "timestamp", new BytesRef(lucene_date_format(art.postTime)), FieldTypeFactory.Get(FTEnum.TimestampIndex));
             indexer.AddField(base_doc, "url", art.url, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
             indexer.AddField(base_doc, "content", art.content, FieldTypeFactory.Get(FTEnum.FullIndex));
             
@@ -134,6 +133,7 @@ public class PttJsonAdaptor implements LumIndexInterface {
             for(PttComment com: art.comments){
                 Document com_doc_x = indexer.CreateIndexDocument(LumIndexer.DOC_FRAGMENT);                
                 indexer.AddField(com_doc_x, "base_ref", base_doc_ref, FieldTypeFactory.Get(FTEnum.RawStoredIndex));                
+                indexer.AddField(com_doc_x, "timestamp", lucene_date_format(art.postTime), FieldTypeFactory.Get(FTEnum.RawStoredIndex));
                 indexer.AddField(com_doc_x, "author", com.author, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
                 indexer.AddField(com_doc_x, "content", com.comment, FieldTypeFactory.Get(FTEnum.FullIndex));
                 indexer.AddField(com_doc_x, "valence", String.valueOf(com.valence), FieldTypeFactory.Get(FTEnum.RawStoredIndex));
@@ -166,7 +166,7 @@ public class PttJsonAdaptor implements LumIndexInterface {
         for(String ln: lines) {
             if (ln.startsWith(":"))
                 continue;
-            sb.append(ln); sb.append("\n");
+            sb.append(ln); // sb.append("\n");
         }
         
         return sb.toString();

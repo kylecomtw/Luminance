@@ -16,8 +16,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,7 +65,7 @@ public class CollocateFromIndex {
         reader = r;
         searcher = new IndexSearcher(reader);
     }
-
+        
     public void GetAllMwe(String field_name) {
         mwe_map.clear();     
         List<Integer> mwe_history = new ArrayList<>();
@@ -83,7 +85,7 @@ public class CollocateFromIndex {
                 if (doc_i % 100 == 0) {
                     System.out.printf("Document %d, %d: %d/%d: MWE found %d%n", 
                             doc_walker.DocId(), doc_walker.DocStep(), 
-                            doc_i, max_doc, mwe_map.size());
+                            doc_i, max_doc, mwe_map.size());                    
                 }
                 
                 if (doc_i % 1000 == 0) {
@@ -113,13 +115,35 @@ public class CollocateFromIndex {
                         break;
                     }                    
                 }
-                // if(doc_i > 1000) break;
+                // if(doc_i > 30) break;
             }                        
         } catch (IOException ex) {
             Logger.getLogger(CollocateFromIndex.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return;
+    }
+    
+    public void ExcludeEnclosed() {
+        Set<String> excl_set = new HashSet<>();
+        List<String> mwe_list = new ArrayList(mwe_map.keySet());
+        for(int i = 0; i < mwe_list.size(); ++i){
+            String mwe_x = mwe_list.get(i);
+            for(int j = 0; j < i; ++j){
+                String mwe_y = mwe_list.get(j);
+                if(mwe_x.contains(mwe_y)){
+                    excl_set.add(mwe_y);
+                }
+                
+                if(mwe_y.contains(mwe_x)){
+                    excl_set.add(mwe_x);
+                }
+            }
+        }
+        
+        mwe_map = mwe_map.entrySet().stream()
+                    .filter((x)->!excl_set.contains(x.getKey()))
+                    .collect(Collectors.toMap((x)->x.getKey(), (x)->x.getValue()));
     }
     
     public void WriteJson(String outpath) throws IOException {
@@ -264,8 +288,10 @@ public class CollocateFromIndex {
                 String probe = content.substring(txt_cursor, Math.min(txt_cursor + win, txt_length));                
                 if (probe.length() < min_win || 
                     mwe_map.containsKey(probe)) {
-                    txt_cursor += probe.length();
-                    continue;
+                    //! remeber to substract one to make room for the 
+                    //! increment in the end of while-loop
+                    txt_cursor += probe.length() - 1;
+                    break;
                 }
                 
                 //! check all characters are valid (occur more than threshold)
@@ -281,7 +307,9 @@ public class CollocateFromIndex {
                 if (freq.nTokens > min_freq) {
                     // System.out.printf("Occurence %s: %d%n", probe, freq);
                     mwe_map.put(probe, freq);
-                    txt_cursor += win;
+                    //! remeber to substract one to make room for the 
+                    //! increment in the end of while-loop
+                    txt_cursor += probe.length() - 1;
                     break;
                 }
             }
