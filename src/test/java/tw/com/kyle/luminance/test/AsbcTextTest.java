@@ -1,9 +1,7 @@
+package tw.com.kyle.luminance.test;
+
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertThat;

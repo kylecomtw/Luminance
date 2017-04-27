@@ -106,8 +106,7 @@ public class AsbcXmlAdaptor implements LumIndexInterface {
             BytesRef base_doc_ref = indexer.GetUUIDAsBytesRef(base_doc);
             indexer.AddToIndex(base_doc);
             indexer.flush();
-            
-            IndexReader idx_reader = indexer.GetReader();
+                        
             if (annot.has_segmented()) {
                 LumDocument seg_doc = annot.create_annot_doc_seg(base_doc_ref);
                 org.apache.lucene.document.Document seg_adoc = indexer.CreateIndexDocument(LumIndexer.DOC_ANNOTATION);
