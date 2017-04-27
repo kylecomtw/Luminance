@@ -7,6 +7,9 @@ package tw.com.kyle.luminance;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -28,14 +31,27 @@ import tw.com.kyle.luminance.FieldTypeFactory.FTEnum;
  */
 public class LumIndexer {
     private IndexWriter idx_writer = null;
+    private IndexReader idx_reader = null;
     private String index_dir = "";
     public static final String DOC_DISCOURSE = "discourse";
     public static final String DOC_FRAGMENT = "fragment";
+    public static final String DOC_ANNOTATION = "annotation";
+    
+    public static void CleanIndex(String index_dir) throws IOException {        
+        if (!Files.exists(Paths.get(index_dir))) return;
+        DirectoryStream<Path> stream = Files.newDirectoryStream(
+                                        Paths.get(index_dir));
+        for(Path path: stream){
+            Files.delete(path);
+        }
+    }  
     
     public String GetIndexDir() {return index_dir;}
-    public static IndexReader GetReader(LumIndexer lum_idx) throws IOException {
-        Directory index = FSDirectory.open(Paths.get(lum_idx.GetIndexDir()));
-        IndexReader idx_reader = DirectoryReader.open(index);
+    
+    public IndexReader GetReader() throws IOException {
+        if (idx_reader == null){            
+            idx_reader = DirectoryReader.open(idx_writer);
+        }
         return idx_reader;
     }
     

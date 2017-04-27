@@ -6,15 +6,12 @@
 package tw.com.kyle.luminance;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import org.apache.lucene.analysis.Tokenizer;
-import org.apache.lucene.analysis.payloads.PayloadHelper;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
-import org.apache.lucene.util.BytesRef;
 
 /**
  *

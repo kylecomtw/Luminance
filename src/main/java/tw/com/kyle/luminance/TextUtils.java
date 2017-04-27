@@ -6,9 +6,11 @@
 package tw.com.kyle.luminance;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -37,90 +39,59 @@ public class TextUtils {
     }
     
     public static String extract_raw_text(String annots){
-        StringBuilder buf = new StringBuilder();
-        int offset_counter = 0;
-        boolean ignore_ch = false;
-        for(int i = 0; i < annots.length(); i++){
-            String ch = annots.substring(i, i+1);            
-            if (ch.equals("(")){
-                ignore_ch = true;
-            } else if (ch.equals(")")){
-                ignore_ch = false;
-            } else if (ch.equals("\u3000")) {
-                //! pass                
-            } else if (ch.equals("\r") || ch.equals("\n") || ch.equals("\t") || ch.equals(" ")) {
-                //! pass
-            } else {
-                if(ignore_ch) continue;
-                buf.append(ch);                
-            }
-        }
-                        
-        return buf.toString();
+        String[] tokens = annots.split("[\u3000\n]");
+        Pattern pat = Pattern.compile("(.*?)\\((.*?)\\)");
+        String parsed = Arrays.asList(tokens).stream()
+                .map((String x)->{
+                    Matcher m = pat.matcher(x);
+                    if(!m.find()) return "";
+                    else return m.group(1);
+                }).collect(Collectors.joining());
+        return parsed;
+    }
+    
+    private static List<String[]> parse_annot_text(String intxt) {
+        String[] tokens = intxt.split("[\u3000\n]");
+        Pattern pat = Pattern.compile("(.*?)\\((.*?)\\)");
+        List<String[]> parsed = Arrays.asList(tokens).stream()
+                .map((String x)->{
+                    Matcher m = pat.matcher(x);
+                    if(!m.find()) return new String[]{};
+                    else return new String[]{m.group(1), m.group(2)};
+                }).collect(Collectors.toList());
+        return parsed;
     }
     
     public static List<String[]> extract_seg_annot(String intxt) {
-        List<String[]> annot_list = new ArrayList<>();        
-        String buf = "";
-        int offset_counter = 0;
-        boolean ignore_ch = false;
-        for(int i = 0; i < intxt.length(); i++){
-            String ch = intxt.substring(i, i+1);            
-            if (ch.equals("(")){
-                ignore_ch = true;
-            } else if (ch.equals(")")){
-                ignore_ch = false;
-            } else if (ch.equals("\u3000")) {
-                annot_list.add(new String[]{buf, buf});                
-                buf = "";
-            } else if (ch.equals("\r") || ch.equals("\n") || ch.equals("\t") || ch.equals(" ")) {
-                //! pass
-            } else {
-                if(ignore_ch) continue;
-                buf += ch;
-                offset_counter += 1;
-            }
-        }
-        
-        if(buf.length() > 0){
-            annot_list.add(new String[]{buf, ""}); 
-            buf = "";
-        }
+        List<String[]> annot_list = parse_annot_text(intxt).stream()
+                .filter((x)->x.length == 2)
+                .map((x)->new String[]{x[0], x[0]})
+                .collect(Collectors.toList());                
         
         return annot_list;
     }
     
     public static List<String[]> extract_pos_annot(String intxt) {
-        List<String[]> annot_list = new ArrayList<>();        
-        String tag_buf = "";
-        String ch_buf = "";
-        boolean in_tag = false;
-        for(int i = 0; i < intxt.length(); i++){
-            String ch = intxt.substring(i, i+1);            
-            if (ch.equals("(")){                            
-                in_tag = true;
-            } else if (ch.equals(")")){
-                annot_list.add(new String[]{ch_buf, tag_buf});                 
-                ch_buf = ""; tag_buf = "";
-                in_tag = false;
-            } else if (ch.equals("\u3000")) {                
-                // pass
-            } else if (ch.equals("\r") || ch.equals("\n") || ch.equals("\t") || ch.equals(" ")) {
-                //! pass
-            } else {
-                if(in_tag){
-                    tag_buf += ch;
-                } else {
-                    ch_buf += ch;
-                }                
-            }
-        }
+        List<String[]> annot_list = parse_annot_text(intxt).stream()
+                .filter((x)->x.length == 2)
+                .map((x)->{
+                    int sidx = x[1].indexOf('/');
+                    if (sidx < 0) {
+                        return new String[]{x[0], x[1]};
+                    } else {
+                        return new String[]{x[0], x[1].substring(0, sidx)};
+                    }
+                })
+                .collect(Collectors.toList());                
         
-        if(tag_buf.length() > 0){
-            annot_list.add(new String[]{ch_buf, tag_buf});  
-            tag_buf = "";
-            ch_buf = "";
-        }
+        return annot_list;
+    }
+    
+    public static List<String[]> extract_ner_annot(String intxt) {
+        List<String[]> annot_list = parse_annot_text(intxt).stream()
+                .filter((x)->x.length == 2)
+                .map((x)->new String[]{x[0], x[1].substring(x[1].indexOf('/')+1)})
+                .collect(Collectors.toList());                
         
         return annot_list;
     }
@@ -140,12 +111,12 @@ public class TextUtils {
                 last_pos = Integer.parseInt(term.substring(term.indexOf('@')));
             }
             
-            int slop = 3;
+            int slop = 20;
             for(int t = 0; t < term.length(); ++t){
                 int pos = pos_map.FindPosition(term.substring(t, t+1), last_pos);                
-                if(pos >= 0 && pos - last_pos <= slop) {
-                    last_pos = pos;                    
+                if(pos >= 0 && pos - last_pos <= slop) {                                        
                     pos_list.add(pos);
+                    last_pos = pos;
                 } else {
                     pos_list.clear();
                     break;                    
