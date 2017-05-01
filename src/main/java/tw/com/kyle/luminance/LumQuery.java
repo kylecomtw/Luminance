@@ -105,13 +105,7 @@ public class LumQuery {
                 String base_ref = leaf_reader.document(nxtDoc).get("baseref");                
                 
                 long base_uuid = 0;
-                LumWindow lumWin = null;
-                if (base_ref == null){                    
-                    lumWin = new LumWindow(targ_doc, idx_reader);
-                } else {
-                    base_uuid = Long.parseLong(base_ref, 16);
-                    lumWin = new LumWindow(targ_doc, base_uuid, idx_reader);
-                }
+                LumWindow lumWin = new LumWindow(targ_doc, idx_reader);
 
                 while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {                                        
                     int[] span_arr = {spans.startPosition(), spans.endPosition()};
