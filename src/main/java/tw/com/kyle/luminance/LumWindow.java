@@ -83,6 +83,10 @@ public class LumWindow {
     }
     
     public String GetWindow(int window_size, int targ_spos, int targ_epos) {
+        return String.join(" ", GetWindowAsArray(window_size, targ_spos, targ_epos));
+    }
+    
+    public String[] GetWindowAsArray(int window_size, int targ_spos, int targ_epos) {
         int w = window_size;
         int targ_so = 0; int targ_eo = 0;
         if (targ_mappings != null){
@@ -101,10 +105,10 @@ public class LumWindow {
             ref_eo = ref_mappings.off_list.get(ref_mappings.pos_list.indexOf(targ_eo));   
         }
                 
-        String kwic = String.format("%s - %s - %s", 
+        String[] kwic = new String[] {
                             ref_doc_content.substring(min_guard.apply(ref_so - w), max_guard.apply(ref_so)),
                             ref_doc_content.substring(min_guard.apply(ref_so), max_guard.apply(ref_eo)),
-                            ref_doc_content.substring(min_guard.apply(ref_eo), max_guard.apply(ref_eo + w)));
+                            ref_doc_content.substring(min_guard.apply(ref_eo), max_guard.apply(ref_eo + w))};
         return kwic;
     }
     

@@ -34,7 +34,7 @@ public class LumUtils {
     }
 
     public static BytesRef LongToBytesRef(long val) {
-        ByteBuffer bbuf = ByteBuffer.allocate(Long.SIZE);
+        ByteBuffer bbuf = ByteBuffer.allocate(Long.BYTES);
         bbuf.putLong(val);
         bbuf.flip();
         return new BytesRef(bbuf.array());

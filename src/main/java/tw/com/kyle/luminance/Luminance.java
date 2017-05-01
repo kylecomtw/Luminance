@@ -5,9 +5,15 @@
  */
 package tw.com.kyle.luminance;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.lucene.util.BytesRef;
 
 /**
@@ -17,18 +23,41 @@ import org.apache.lucene.util.BytesRef;
  */
 public class Luminance {
 
-    private String index_dir;
-    public Luminance(String idir) {
+    private final String index_dir;
+    private LumIndexer indexer = null;
+    public Luminance(String idir) throws IOException {
         index_dir = idir;
+        indexer = new LumIndexer(index_dir);
+    }
+    
+    public void close() throws IOException {
+        indexer.flush();
+        indexer.close();
+    }
+    
+    public static void clean_index(String index_dir) throws IOException {
+        LumIndexer.CleanIndex(index_dir);        
+    }
+    
+    public JsonElement add_document(String text) throws IOException {
+        
+        JsonObject ret = null;
+        if(TextUtils.is_segmented(text)){
+            ret = add_plain_text(TextUtils.extract_raw_text(text));
+            String base_uuid = ret.get("uuid").getAsString();
+            JsonObject annot_ret = add_annotation(text, base_uuid);
+            for(Entry<String, JsonElement> ent: annot_ret.entrySet()){
+                ret.add(ent.getKey(), ent.getValue());
+            }
+        } else {
+            ret = add_plain_text(text);
+        }
+        
+        return ret;
     }
 
-    public JsonElement add_document(String text) {
-        return null;
-    }
-
-    public JsonObject add_plain_text(String text) throws IOException {
-        String INDEX_DIR = "h:/index_test";        
-        LumIndexer indexer = new LumIndexer(index_dir);
+    public JsonObject add_plain_text(String text) throws IOException { 
+        indexer.open();
         org.apache.lucene.document.Document base_doc = indexer.CreateIndexDocument(LumIndexer.DOC_DISCOURSE);                
         indexer.AddField(base_doc, "title", "", FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
         indexer.AddField(base_doc, "timestamp", LumUtils.get_lucene_timestamp(), FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
@@ -37,8 +66,6 @@ public class Luminance {
 
         BytesRef base_doc_ref = indexer.GetUUIDAsBytesRef(base_doc);
         indexer.AddToIndex(base_doc);
-        indexer.flush();
-        indexer.close();
         
         JsonObject jObj = new JsonObject();
         jObj.addProperty("uuid", Long.toHexString(LumUtils.BytesRefToLong(base_doc_ref)));
@@ -46,8 +73,8 @@ public class Luminance {
     }
 
     public JsonObject add_annotation(String text, String base_uuid) throws IOException {
-        AnnotationProvider annot = new AnnotationProvider(text);
-        LumIndexer indexer = new LumIndexer(index_dir);        
+        indexer.open();
+        AnnotationProvider annot = new AnnotationProvider(text);               
         BytesRef base_doc_ref = LumUtils.LongToBytesRef(Long.parseLong(base_uuid, 16));
         JsonObject jobj = new JsonObject();
         if (annot.has_segmented()) {
@@ -89,8 +116,44 @@ public class Luminance {
         return null;
     }
 
-    public JsonElement find_text() {
-        return null;
+    public JsonArray find_text(String text) throws IOException {                
+        Concordance concord = new Concordance(indexer.GetReaderOnly());
+        JsonObject jobj = new JsonObject();
+        List<ConcordanceResult> cr_list = concord.query(text, "annot", false);
+        Function<Token, JsonArray> map_token = (Token x)->{
+            JsonObject x_obj = new JsonObject();
+            x_obj.addProperty("text", x.word);
+            x_obj.addProperty("pos", x.pos);
+            if (x.data != null) x_obj.addProperty("data", String.join(", ", x.data));
+            if (x.ner != null) x_obj.addProperty("ner", x.ner);
+            if (x.dep != null) x_obj.addProperty("dep", x.dep);
+            
+            JsonArray x_arr = new JsonArray();
+            x_arr.add(x_obj);
+            return x_arr;
+        };                
+        
+        BinaryOperator<JsonArray> combiner = (a, b) -> {
+            a.addAll(b); return a;
+        };
+        
+        Function<List<Token>, JsonArray> jarr_pipeline = (List<Token> cr_x) -> 
+                        cr_x.stream()
+                            .map((x)->map_token.apply(x))
+                            .collect(Collectors.reducing(
+                                     new JsonArray(), combiner));
+        
+        JsonArray cr_jarr = new JsonArray();
+        for(ConcordanceResult cr: cr_list){
+            JsonArray prec_arr = jarr_pipeline.apply(cr.prec_context);
+            JsonArray succ_arr = jarr_pipeline.apply(cr.succ_context);
+            JsonObject cr_obj = (JsonObject)map_token.apply(cr.target).get(0);
+            cr_obj.add("prec", prec_arr);
+            cr_obj.add("succ", succ_arr);
+            cr_jarr.add(cr_obj);
+        }
+        
+        return cr_jarr;
     }
 
     public JsonElement find_tag() {

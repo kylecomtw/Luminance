@@ -55,6 +55,11 @@ public class LumIndexer {
         return idx_reader;
     }
     
+    public IndexReader GetReaderOnly() throws IOException {
+        Directory index = FSDirectory.open(Paths.get(index_dir));
+        return DirectoryReader.open(index);
+    }
+    
     public LumIndexer(String indir) throws IOException {
         index_dir = indir;
         Directory index = FSDirectory.open(Paths.get(index_dir));
@@ -76,6 +81,12 @@ public class LumIndexer {
     
     public void flush() throws IOException {
         idx_writer.flush();
+    }
+    
+    public void open() throws IOException {
+        if (!idx_writer.isOpen()) {                    
+            reset();
+        }
     }
     
     public void index_text(String text_content) throws IOException {
