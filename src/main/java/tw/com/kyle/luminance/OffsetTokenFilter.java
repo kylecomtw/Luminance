@@ -20,7 +20,7 @@ public class OffsetTokenFilter extends TokenFilter{
     }
     
     @Override
-    public boolean incrementToken() throws IOException {
+    public final boolean incrementToken() throws IOException {
         if (!input.incrementToken()){
             return false;
         } else {                

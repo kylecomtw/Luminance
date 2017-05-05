@@ -175,10 +175,10 @@ public class Luminance {
     private void setup_index_annot_document(LumIndexer indexer,
             org.apache.lucene.document.Document idx_doc,
             String annot_type, String annot_content, BytesRef base_doc_ref) {
-        indexer.AddField(idx_doc, "annot", annot_content, FieldTypeFactory.Get(FieldTypeFactory.FTEnum.NonStoredFullIndex));
+        indexer.AddField(idx_doc, "anno", annot_content, FieldTypeFactory.Get(FieldTypeFactory.FTEnum.NonStoredFullIndex));
         indexer.AddField(idx_doc, "base_ref", base_doc_ref, FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
-        indexer.AddField(idx_doc, "annot_type", annot_type, FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
-        indexer.AddField(idx_doc, "annot_mode", "manual", FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
-        indexer.AddField(idx_doc, "annot_range", "spanned", FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
+        indexer.AddField(idx_doc, "anno_type", annot_type, FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
+        indexer.AddField(idx_doc, "anno_mode", "manual", FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
+        indexer.AddField(idx_doc, "anno_range", "spanned", FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
     }
 }

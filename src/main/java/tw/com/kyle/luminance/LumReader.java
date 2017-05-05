@@ -6,15 +6,19 @@
 package tw.com.kyle.luminance;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.SimpleCollector;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 
 /**
@@ -27,6 +31,16 @@ public class LumReader {
     public LumReader(IndexReader r) {
         reader = r;
         searcher = new IndexSearcher(reader);
+    }
+    
+    public LumReader(String index_dir) throws IOException {
+        Directory index = FSDirectory.open(Paths.get(index_dir));
+        reader = DirectoryReader.open(index);
+        searcher = new IndexSearcher(reader);
+    }
+    
+    public IndexReader GetReader() {
+        return reader;
     }
     
     public Document getDocument(long uuid) throws IOException {

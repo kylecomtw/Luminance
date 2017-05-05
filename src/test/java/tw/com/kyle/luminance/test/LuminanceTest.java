@@ -37,17 +37,5 @@ public class LuminanceTest {
         assertTrue(elem.has("pos"));       
         
     }
-    
-    @Test
-    public void testConcordance() throws IOException {
-        String INDEX_DIR = "h:/index_dir";
-        Luminance.clean_index(INDEX_DIR);
-        Luminance lum = new Luminance(INDEX_DIR);
-        String txt = String.join("", 
-                Files.readAllLines(Paths.get("etc/test/simple_text.txt"), StandardCharsets.UTF_8));        
-        JsonObject elem = (JsonObject) lum.add_document(txt);
-        lum.close();
-        
-        JsonArray con_list = lum.find_text("詞");        
-    }
+
 }

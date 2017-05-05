@@ -30,7 +30,7 @@ public class OffsetTokenizer extends Tokenizer {
     }
 
     @Override
-    public boolean incrementToken() throws IOException {
+    public final boolean incrementToken() throws IOException {
         clearAttributes();
         char[] chbuf = new char[1];
         StringBuilder sbbuf = new StringBuilder();
