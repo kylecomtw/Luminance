@@ -3,9 +3,8 @@ package tw.com.kyle.luminance.test;
 
 import java.io.IOException;
 import java.util.List;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.assertThat;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 import tw.com.kyle.luminance.LumIndexer;
 import tw.com.kyle.luminance.corpus.AsbcXmlAdaptor;
 import tw.com.kyle.luminance.corpus.AsbcXmlAdaptor.AsbcDocument;
@@ -27,7 +26,7 @@ public class AsbcTextTest {
         String asbc_path = "etc/test/asbc.xml";
         AsbcXmlAdaptor adaptor = new AsbcXmlAdaptor();
         List<AsbcDocument> doc_list = adaptor.Parse(asbc_path);        
-        assertThat(doc_list.size(), greaterThan(0));
+        assertTrue(doc_list.size() > 0);
     }
     
     @Test

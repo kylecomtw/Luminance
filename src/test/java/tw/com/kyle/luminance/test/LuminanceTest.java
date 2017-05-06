@@ -1,14 +1,13 @@
 package tw.com.kyle.luminance.test;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import static org.junit.Assert.assertTrue;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import tw.com.kyle.luminance.Luminance;
 
 /*
@@ -22,7 +21,7 @@ import tw.com.kyle.luminance.Luminance;
  * @author Sean_S325
  */
 public class LuminanceTest {
-    @Ignore @Test
+    @Disabled @Test
     public void testAddSimpleText() throws IOException{
         String INDEX_DIR = "h:/index_dir";
         Luminance.clean_index(INDEX_DIR);

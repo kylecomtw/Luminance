@@ -15,8 +15,8 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import tw.com.kyle.luminance.Luminance;
 import tw.com.kyle.luminance.coeus.DocData;
 import tw.com.kyle.luminance.coeus.FeatureAnalyzer;
@@ -42,7 +42,7 @@ public class DocumentFeatureTest {
         writer.close();
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void testFeatures() throws IOException {
         String INDEX_DIR = "h:/index_dir";

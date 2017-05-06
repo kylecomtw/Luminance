@@ -2,9 +2,9 @@ package tw.com.kyle.luminance.test;
 
 
 import java.util.List;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 import tw.com.kyle.luminance.TextUtils;
 
 /*
@@ -33,7 +33,7 @@ public class TextUtilsTest {
         String annot_text = "自備(VC)　２５０萬(Neu/NEU)　，(COMMACATEGORY)\n" + 
                 "並(Cbb)　可(D)　省(VJ)　仲介(Nv)　費用(Na)　。(PERIODCATEGORY)";
         List<String[]> ner = TextUtils.extract_ner_annot(annot_text);
-        assertThat(ner.get(1)[1], is("NEU"));
+        assertEquals(ner.get(1)[1], "NEU");
     }
     
     @Test
@@ -41,6 +41,6 @@ public class TextUtilsTest {
         String annot_text = "自備@0(VC)　２５０萬(Neu/NEU)　，(COMMACATEGORY)\n" + 
                 "並(Cbb)　可(D)　省@5(VJ)　仲介(Nv)　費用(Na)　。(PERIODCATEGORY)";
         List<String[]> seg = TextUtils.extract_seg_annot(annot_text);
-        assertThat(seg.get(5)[0], is("省@5"));
+        assertTrue(seg.get(5)[0].equals("省@5"));
     }
 }

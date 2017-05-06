@@ -87,7 +87,7 @@ public class LumWindow {
     
     public String Reconstruct(int window_size, int targ_spos, int targ_epos) {
         Integer[] ref_range = map_to_reference_offset(targ_spos, targ_epos);
-        
+        return null;
     }
     
     public String GetWindow(int window_size, int targ_spos, int targ_epos) {
@@ -112,12 +112,14 @@ public class LumWindow {
         
         //! reference offset -> reference position
         if (targ_mappings != null) {
-            ref_spos = targ_mappings.off_list.get(targ_mappings.pos_list.indexOf(targ_spos));
-            ref_epos = targ_mappings.off_list.get(targ_mappings.pos_list.indexOf(targ_epos));
+            ref_spos = targ_mappings.off_list.get(targ_mappings.pos_list.indexOf(ref_soff));
+            ref_epos = targ_mappings.off_list.get(targ_mappings.pos_list.indexOf(ref_eoff));
         } else {
-            targ_so = _spos;
-            targ_eo = targ_epos;
+            ref_spos = ref_soff;
+            ref_epos = ref_eoff;
         }
+        
+        return new Integer[] {0, 0};
     }
     
     private Integer[] map_to_reference_offset(int targ_spos, int targ_epos){
