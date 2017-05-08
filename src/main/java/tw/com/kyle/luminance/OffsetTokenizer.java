@@ -24,8 +24,7 @@ public class OffsetTokenizer extends Tokenizer {
     private final PositionLengthAttribute posLenAttr = addAttribute(PositionLengthAttribute.class);    
     private final PayloadAttribute payAttr = addAttribute(PayloadAttribute.class);
     private int index = 0;
-    private int pos_cur = 0;
-    private boolean is_head = true;
+    private int pos_cur = -1;    
     
     public OffsetTokenizer(){          
     }
@@ -38,7 +37,7 @@ public class OffsetTokenizer extends Tokenizer {
         boolean ignore_ch = true;
         int start_offset = index;
         int end_offset = 0;
-        int len = 0;
+        int len = 0;        
         while((len = input.read(chbuf)) > 0) {
             end_offset = index;
             switch(chbuf[0]){
@@ -69,9 +68,13 @@ public class OffsetTokenizer extends Tokenizer {
         
         charAttr.setEmpty().append(tag);        
         offsetAttr.setOffset(s_pos, e_pos);
-        posIncAttr.setPositionIncrement(s_pos - pos_cur);
+        if (pos_cur >= 0){
+            posIncAttr.setPositionIncrement(s_pos - pos_cur);
+        } else {
+            posIncAttr.setPositionIncrement(1);
+        }
         posLenAttr.setPositionLength(e_pos - s_pos);   
-        pos_cur = e_pos;
+        pos_cur = s_pos;
     }
     
     @Override
@@ -94,8 +97,7 @@ public class OffsetTokenizer extends Tokenizer {
     @Override
     public void reset() throws IOException {
         super.reset();
-        is_head = true;
-        pos_cur = 0;
+        pos_cur = -1;
         index = 0;
     }
 }

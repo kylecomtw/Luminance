@@ -15,8 +15,6 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.highlight.TokenSources;
 
 /**
  *
@@ -24,7 +22,7 @@ import org.apache.lucene.search.highlight.TokenSources;
  */
 public class LumWindow {
     private Logger logger = Logger.getLogger(LumWindow.class.getName());
-    private IndexReader reader = null;
+    private LumReader lum_reader = null;
     private String ref_doc_content = null;
     // private Mappings targ_mappings = null;
     private Mappings ref_mappings = null;
@@ -36,24 +34,19 @@ public class LumWindow {
         public List<Integer> off_list;
     }
 
-    private void common_init() {
-        
+    public LumWindow(Document doc, LumReader r) {
+        initialize(doc, r);
     }
 
-    public LumWindow() {
-
-    }
-
-    public void initialize(Document doc, IndexReader r) {
-        reader = r;        
+    public final void initialize(Document doc, LumReader r) {
+        lum_reader = r;        
         try {
-            if (doc == null) throw new NullPointerException();
-            LumReader lum_reader = new LumReader(reader);
+            if (doc == null) throw new NullPointerException();            
             String doc_class = doc.get("class");
             if (doc_class.equals(LumIndexer.DOC_DISCOURSE)){
                 initialize_mappings(doc, lum_reader);
             } else {
-                Document ref_doc = lum_reader.getDocument(LumUtils.BytesRefToLong(doc.getBinaryValue("base_ref")));
+                Document ref_doc = lum_reader.GetDocument(LumUtils.BytesRefToLong(doc.getBinaryValue("base_ref")));
                 initialize_mappings(ref_doc, lum_reader);
             }      
             
@@ -78,8 +71,17 @@ public class LumWindow {
         }
     }
     
-    public String Reconstruct(int window_size, int targ_spos, int targ_epos) {
-        Integer[] ref_range = map_to_reference_offset(targ_spos, targ_epos);
+    public String Reconstruct(int window_size, int ref_spos, int ref_epos) {
+        Integer[] targ_pos = map_to_target_position(ref_spos - window_size, ref_epos + window_size);
+        
+        return null;
+    }
+    
+    public String ExtractTargetRange(String field, int targ_spos, int targ_epos) {
+        throw new UnsupportedOperationException();
+    }
+    
+    public LumAnnotations GetAnnotationData() {
         return null;
     }
     
@@ -100,7 +102,12 @@ public class LumWindow {
     }
     
     private Integer[] map_to_target_position(int ref_soff, int ref_eoff){
-        throw new UnsupportedOperationException();
+        //! map reference offsets to reference positions
+        //! reference positions are target positions
+        int ref_spos = ref_mappings.pos_list.get(ref_mappings.off_list.indexOf(ref_soff));
+        int ref_epos = ref_mappings.pos_list.get(ref_mappings.off_list.indexOf(ref_eoff));
+        return new Integer[] {ref_spos, ref_epos};
+        
     }
     
     private Integer[] map_to_reference_offset(int targ_spos, int targ_epos){
@@ -125,14 +132,14 @@ public class LumWindow {
     
     private Mappings prepare_mappings(int doc_id, String field) throws IOException {
         List<Integer> pos_list = new ArrayList<>();
-        List<Integer> off_list = new ArrayList<>();            
-        TokenStream tokenStream = TokenSources.getTermVectorTokenStreamOrNull(
-                field,
-                reader.getTermVectors(doc_id), -1);
+        List<Integer> off_list = new ArrayList<>();   
+        
+        TokenStream tokenStream = lum_reader.GetTokenStream(doc_id, field);
         if (tokenStream == null) return null;
         
         OffsetAttribute offsetAttr = tokenStream.getAttribute(OffsetAttribute.class);
         PositionIncrementAttribute posincAttr = tokenStream.getAttribute(PositionIncrementAttribute.class);
+        tokenStream.reset();
         int pos_counter = 0;
         while (tokenStream.incrementToken()) {
             pos_list.add(pos_counter);
