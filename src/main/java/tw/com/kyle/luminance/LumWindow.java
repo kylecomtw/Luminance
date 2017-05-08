@@ -74,24 +74,49 @@ public class LumWindow {
             ref_doc_content = ref_doc.get("content");
             ref_doc_id = lum_reader.getDocId(ref_doc);
             ref_uuid = lum_reader.GetDocUuid(ref_doc);
-            ref_mappings = prepare_mappings(ref_doc_id, "content");
+            // ref_mappings = prepare_mappings(ref_doc_id, "content");
             buildAnnotationData(ref_uuid, ref_doc_id);
         } else {
             logger.severe("Mapping initialization error");
         }
     }
 
-    public String Reconstruct(int window_size, int ref_spos, int ref_epos) {
-        Integer[] targ_pos = map_to_target_position(ref_spos - window_size, ref_epos + window_size);
-
-        return null;
+    public List<LumToken> Reconstruct(int window_size, int ref_spos, int ref_epos) throws IOException {
+        int soff = min_guard.apply(ref_spos - window_size);
+        int eoff = max_guard.apply(ref_epos + window_size);
+        
+        long seg_uuid = lum_annot.getLatestUuid("seg");
+        long pos_uuid = lum_annot.getLatestUuid("pos");
+        long ner_uuid = lum_annot.getLatestUuid("ner");
+        
+        LumTokensBuilder builder = new LumTokensBuilder();
+        if (seg_uuid > 0) {
+            List<LumRange> seg_range = ExtractLumRanges(seg_uuid, soff, eoff);
+            builder.combines(seg_range);
+        }
+        
+        if (pos_uuid > 0){
+            List<LumRange> pos_range = ExtractLumRanges(pos_uuid, soff, eoff);
+            builder.combines(pos_range);
+        }
+        
+        if (ner_uuid > 0){
+            List<LumRange> ner_range = ExtractLumRanges(ner_uuid, soff, eoff);
+            builder.combines(ner_range);
+        }
+        
+        if (builder.nSeq() > 1) {
+            logger.info("More than one sequence when reconstructing");
+        }
+        
+        return builder.get(0);
     }
     
     //! TODO: fix position / offset
-    public List<LumRange> ExtractLumRanges(long annot_uuid, int targ_spos, int targ_epos) {
+    public List<LumRange> ExtractLumRanges(long annot_uuid, int ref_soff, int ref_eoff) throws IOException {
         List<LumRange> range_data = lum_annot.GetLumRange(annot_uuid, this);
         List<LumRange> ext_range = range_data.stream()
-                .filter((x) -> x.start_off >= targ_spos && x.end_off <= targ_epos)
+                .filter((x) -> x.start_off >= ref_soff && x.end_off <= ref_eoff)
                 .collect(Collectors.toList());
         return ext_range;
     }
@@ -100,12 +125,12 @@ public class LumWindow {
         return lum_annot;
     }
 
-    public String GetWindow(int window_size, int targ_spos, int targ_epos) {
-        return String.join(" ", GetWindowAsArray(window_size, targ_spos, targ_epos));
+    public String GetWindow(int window_size, int ref_soff, int ref_eoff) {
+        return String.join(" ", GetWindowAsArray(window_size, ref_soff, ref_eoff));
     }
 
-    public String[] GetWindowAsArray(int window_size, int targ_spos, int targ_epos) {
-        Integer[] ref_range = map_to_reference_offset(targ_spos, targ_epos);
+    public String[] GetWindowAsArray(int window_size, int ref_soff, int ref_eoff) {
+        Integer[] ref_range = new Integer[]{ref_soff, ref_eoff};
         int w = window_size;
         int ref_so = ref_range[0];
         int ref_eo = ref_range[1];
@@ -135,7 +160,7 @@ public class LumWindow {
         List<LumRange> lr_list = new ArrayList<>();
         while (tokenStream.incrementToken()) {
             LumRange lr = new LumRange();
-            lr.data = new String(chAttr.buffer());            
+            lr.data = chAttr.toString();
             lr.start_off = offAttr.startOffset();            
             lr.end_off = offAttr.endOffset();            
             lr_list.add(lr);

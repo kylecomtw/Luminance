@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static junit.framework.Assert.assertTrue;
@@ -18,6 +19,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.junit.Test;
 import tw.com.kyle.luminance.LumAnnotations;
+import tw.com.kyle.luminance.LumRange;
 
 import tw.com.kyle.luminance.LumReader;
 import tw.com.kyle.luminance.LumWindow;
@@ -37,7 +39,7 @@ public class LumWindowTest {
             Luminance lum = new Luminance(INDEX_DIR);
             String txt = String.join("",
                     Files.readAllLines(Paths.get("etc/test/simple_text.txt"), StandardCharsets.UTF_8));
-            JsonObject elem = (JsonObject) lum.add_document(txt);            
+            JsonObject elem = (JsonObject) lum.add_document(txt);
             lum.close();
         } catch (IOException ex) {
             System.out.println(ex);
@@ -61,7 +63,7 @@ public class LumWindowTest {
     @Test
     public void testDiscourseWindow() {
         setup();
-        try (LumReader lum_reader = new LumReader(INDEX_DIR);) {            
+        try (LumReader lum_reader = new LumReader(INDEX_DIR);) {
             IndexReader reader = lum_reader.GetReader();
             Document targ_doc = lum_reader.GetDocumentByDocId(0);
             LumWindow lumWin = new LumWindow(targ_doc, lum_reader);
@@ -78,7 +80,7 @@ public class LumWindowTest {
     @Test
     public void testAnnotationWindow() {
         setup();
-        try (LumReader lum_reader = new LumReader(INDEX_DIR);) {            
+        try (LumReader lum_reader = new LumReader(INDEX_DIR);) {
             Document targ_doc = lum_reader.GetDocumentByDocId(1);
             LumWindow lumWin = new LumWindow(targ_doc, lum_reader);
 
@@ -92,9 +94,27 @@ public class LumWindowTest {
     }
 
     @Test
+    public void testExtractLumRanges() {
+        setup();
+        try (LumReader lum_reader = new LumReader(INDEX_DIR);) {
+            Document targ_doc = lum_reader.GetDocumentByDocId(1);
+            LumWindow lumWin = new LumWindow(targ_doc, lum_reader);
+            LumAnnotations annot_data = lumWin.GetAnnotationData();
+            List<LumRange> range_data = lumWin.ExtractLumRanges(annot_data.getLatestUuid("seg"), 5, 7);
+            assertTrue(range_data.get(0).data.equals("意義"));
+            assertTrue(range_data.get(0).start_off == 5);
+            assertTrue(range_data.get(0).end_off == 7);
+
+        } catch (IOException ex) {
+            Logger.getLogger(LumWindowTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail("IOException thrown");
+        }
+    }
+
+    @Test
     public void testReconstruct() {
         setup();
-        try (LumReader lum_reader = new LumReader(INDEX_DIR);) {            
+        try (LumReader lum_reader = new LumReader(INDEX_DIR);) {
             Document targ_doc = lum_reader.GetDocumentByDocId(1);
             LumWindow lumWin = new LumWindow(targ_doc, lum_reader);
 
@@ -108,13 +128,13 @@ public class LumWindowTest {
     @Test
     public void testGetAnnotationList() {
         setup();
-        try (LumReader lum_reader = new LumReader(INDEX_DIR);) {                        
+        try (LumReader lum_reader = new LumReader(INDEX_DIR);) {
             Document ref_doc = lum_reader.GetDocumentByDocId(0);
             LumWindow lumWin = new LumWindow(ref_doc, lum_reader);
             LumAnnotations annot_data = lumWin.GetAnnotationData();
             assertTrue(annot_data.hasSegmentation());
             assertTrue(annot_data.hasPOSTagged());
-            assertTrue(annot_data.size() == 2);            
+            assertTrue(annot_data.size() == 2);
         } catch (IOException ex) {
             Logger.getLogger(LumWindowTest.class.getName()).log(Level.SEVERE, null, ex);
             fail("IOException thrown");

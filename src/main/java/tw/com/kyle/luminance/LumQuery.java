@@ -7,6 +7,8 @@ package tw.com.kyle.luminance;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
@@ -23,6 +25,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.spans.SpanCollector;
 import org.apache.lucene.search.spans.SpanNearQuery;
 import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
@@ -31,7 +34,6 @@ import org.apache.lucene.search.spans.SpanWeight.Postings;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.BytesRef;
 
 /**
  *
@@ -70,50 +72,113 @@ public class LumQuery {
         return (int) (idx_reader.totalTermFreq(term_inst));
     }
 
-    public int span_query(String term, String field, boolean useNearQuery) throws IOException {
-        if (term.length() == 0) return -1;
-        
+    public List<Integer[]> query_for_offsets(String term, String field, boolean useNearQuery) throws IOException {
+        if (term.length() == 0) {
+            return null;
+        }
+
         SpanQuery sq = null;
-        if(!useNearQuery){
-            sq = new SpanTermQuery(new Term(field, term));        
+        if (!useNearQuery) {
+            sq = new SpanTermQuery(new Term(field, term));
         } else {
-        
+
             SpanNearQuery.Builder builder = new SpanNearQuery.Builder(field, true);
-            for(int i = 0; i < term.length(); ++i){
-                builder.addClause(new SpanTermQuery(new Term(field, term.substring(i,i+1))));
-            }        
+            for (int i = 0; i < term.length(); ++i) {
+                builder.addClause(new SpanTermQuery(new Term(field, term.substring(i, i + 1))));
+            }
             sq = builder.build();
         }
-            
+
         IndexSearcher searcher = new IndexSearcher(idx_reader);
-        for (LeafReaderContext ctx : idx_reader.leaves()) {                        
-            
+        List<Integer[]> offs = new ArrayList<>();
+        for (LeafReaderContext ctx : idx_reader.leaves()) {
+
             SpanWeight weights = sq.createWeight(searcher, false);
-            if(weights == null) continue;
+            if (weights == null) {
+                continue;
+            }
+            Spans spans = weights.getSpans(ctx, Postings.OFFSETS);
+            if (spans == null) {
+                System.out.printf("Nothing found for %s%n", term);
+                continue;
+            }
+
+            int nxtDoc = -1;
+            while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {
+                final int doc_id = nxtDoc;
+                while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                    spans.collect(new SpanCollector() {
+                        @Override
+                        public void collectLeaf(PostingsEnum pe, int i, Term term) throws IOException {
+                            int s_off = pe.startOffset();
+                            int e_off = pe.endOffset();
+                            offs.add(new Integer[]{doc_id, s_off, e_off});
+                        }
+
+                        @Override
+                        public void reset() {
+                            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                        }
+
+                    });
+
+                }
+
+            }
+
+        }
+
+        return offs;
+    }
+
+    public int span_query(String term, String field, boolean useNearQuery) throws IOException {
+        if (term.length() == 0) {
+            return -1;
+        }
+
+        SpanQuery sq = null;
+        if (!useNearQuery) {
+            sq = new SpanTermQuery(new Term(field, term));
+        } else {
+
+            SpanNearQuery.Builder builder = new SpanNearQuery.Builder(field, true);
+            for (int i = 0; i < term.length(); ++i) {
+                builder.addClause(new SpanTermQuery(new Term(field, term.substring(i, i + 1))));
+            }
+            sq = builder.build();
+        }
+
+        IndexSearcher searcher = new IndexSearcher(idx_reader);
+        for (LeafReaderContext ctx : idx_reader.leaves()) {
+
+            SpanWeight weights = sq.createWeight(searcher, false);
+            if (weights == null) {
+                continue;
+            }
             Spans spans = weights.getSpans(ctx, Postings.POSITIONS);
-            if (spans == null){
+            if (spans == null) {
                 System.out.printf("Nothing found for %s%n", term);
                 continue;
             }
             int nxtDoc = 0;
-            
+
             LeafReader leaf_reader = ctx.reader();
-            while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {     
-                
-                String doc_content = leaf_reader.document(nxtDoc).get(field);                
+            while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {
+
+                String doc_content = leaf_reader.document(nxtDoc).get(field);
                 Document targ_doc = leaf_reader.document(nxtDoc);
-                String base_ref = leaf_reader.document(nxtDoc).get("baseref");                
-                
+                String base_ref = leaf_reader.document(nxtDoc).get("baseref");
+
                 long base_uuid = 0;
-                LumWindow lumWin = new LumWindow(targ_doc, new LumReader(idx_reader));                
-                
-                while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {                                        
+                LumWindow lumWin = new LumWindow(targ_doc, new LumReader(idx_reader));
+
+                while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
                     int[] span_arr = {spans.startPosition(), spans.endPosition()};
 
-                    System.out.printf("%d, %d, %d%n", nxtDoc, span_arr[0], span_arr[1]); 
+                    System.out.printf("%d, %d, %d%n", nxtDoc, span_arr[0], span_arr[1]);
                     System.out.printf("%s%n", lumWin.GetWindow(5, span_arr[0], span_arr[1]));
-                }                                              
-                
+                }
+
             }
         }
 
@@ -121,8 +186,8 @@ public class LumQuery {
         return 0;
     }
 
-    public void ListTerm(int docId) throws IOException{
-        
+    public void ListTerm(int docId) throws IOException {
+
         Terms terms = idx_reader.getTermVector(docId, "content");
         TermsEnum term_enum = terms.iterator();
         while (term_enum.next() != null) {

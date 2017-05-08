@@ -24,7 +24,7 @@ public class OffsetTokenizer extends Tokenizer {
     private final PositionLengthAttribute posLenAttr = addAttribute(PositionLengthAttribute.class);    
     private final PayloadAttribute payAttr = addAttribute(PayloadAttribute.class);
     private int index = 0;
-    private int pos_cur = -1;    
+    private int last_offset = -1;    
     
     public OffsetTokenizer(){          
     }
@@ -62,19 +62,20 @@ public class OffsetTokenizer extends Tokenizer {
     
     private void setup_token(String strbuf, int so, int eo){
         String[] toks = strbuf.split(",");        
-        int s_pos = Integer.parseInt(toks[0].trim());
-        int e_pos = Integer.parseInt(toks[1].trim());             
+        int s_off = Integer.parseInt(toks[0].trim());
+        int e_off = Integer.parseInt(toks[1].trim());             
         String tag = toks[2].trim();
         
         charAttr.setEmpty().append(tag);        
-        offsetAttr.setOffset(s_pos, e_pos);
-        if (pos_cur >= 0){
-            posIncAttr.setPositionIncrement(s_pos - pos_cur);
+        offsetAttr.setOffset(s_off, e_off);
+        if (s_off-last_offset != 0) {
+            posIncAttr.setPositionIncrement(5);
         } else {
             posIncAttr.setPositionIncrement(1);
         }
-        posLenAttr.setPositionLength(e_pos - s_pos);   
-        pos_cur = s_pos;
+        
+        posLenAttr.setPositionLength(1);   
+        last_offset = e_off;
     }
     
     @Override
@@ -97,7 +98,7 @@ public class OffsetTokenizer extends Tokenizer {
     @Override
     public void reset() throws IOException {
         super.reset();
-        pos_cur = -1;
+        last_offset = -1;
         index = 0;
     }
 }

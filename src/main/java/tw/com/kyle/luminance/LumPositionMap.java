@@ -11,10 +11,8 @@ import java.util.List;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Terms;
-import org.apache.lucene.search.highlight.TokenSources;
 
 /**
  *
@@ -41,7 +39,8 @@ public class LumPositionMap {
         TokenStream tstream = analyzer.tokenStream("", raw_text);        
                 
         CharTermAttribute termAttr = tstream.getAttribute(CharTermAttribute.class);
-        PositionIncrementAttribute posIncAttr = tstream.getAttribute(PositionIncrementAttribute.class);
+        OffsetAttribute offAttr = tstream.getAttribute(OffsetAttribute.class);        
+        // PositionIncrementAttribute posIncAttr = tstream.getAttribute(PositionIncrementAttribute.class);        
         // PositionLengthAttribute posLenAttr = tstream.getAttribute(PositionLengthAttribute.class);
 
         List<String> tokens = new ArrayList<>();
@@ -51,21 +50,21 @@ public class LumPositionMap {
         tstream.reset();
         while (tstream.incrementToken()) {
             tokens.add(termAttr.toString());
-            pos_list.add(pos_counter);
-            pos_counter += posIncAttr.getPositionIncrement();
+            pos_list.add(offAttr.startOffset());            
         }
 
         return new LumPositionMap(tokens, pos_list);
     }
 
     public int FindPosition(String term, int start) {
-        List<String> tokens = pos_info.tokens;
-        int idx = tokens.subList(start, tokens.size()).indexOf(term);
-        if (idx >= 0) {
-            return pos_info.pos_list.get(start + idx);
-        } else {
-            return idx;
+        for(int i = 0; i < pos_info.tokens.size(); ++i){
+            int pos_x = pos_info.pos_list.get(i);
+            if (pos_x >= start && pos_info.tokens.get(i).equals(term)) {
+                return pos_x;
+            }             
         }
+        
+        return -1;
     }
 
 }

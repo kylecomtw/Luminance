@@ -126,7 +126,8 @@ public class Luminance {
             x_obj.addProperty("pos", x.pos);
             if (x.data != null) x_obj.addProperty("data", String.join(", ", x.data));
             if (x.ner != null) x_obj.addProperty("ner", x.ner);
-            if (x.dep != null) x_obj.addProperty("dep", x.dep);
+            if (x.depLabel != null) x_obj.addProperty("depLabel", x.depLabel);
+            if (x.depGov >= 0) x_obj.addProperty("depGov", x.depGov);
             
             JsonArray x_arr = new JsonArray();
             x_arr.add(x_obj);

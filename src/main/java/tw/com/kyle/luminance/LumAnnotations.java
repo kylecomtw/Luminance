@@ -39,6 +39,18 @@ public class LumAnnotations {
         return annot_list.stream().anyMatch((x)->x.annot_type.equals(atype));
     }
         
+    public long getLatestUuid(String atype){
+        Optional<Long> opt_uuid = annot_list.stream()
+                .filter((x)->x.annot_type.equals(atype))
+                .map((x)->x.annot_uuid)
+                .reduce((a,b)->b);
+        if(opt_uuid.isPresent()){
+            return opt_uuid.get();
+        } else {
+            return Long.MIN_VALUE;
+        }
+    }
+    
     public int size() { return annot_list.size(); }
     
     public LumAnnotations(long ref_uuid) { base_ref = ref_uuid; }
@@ -48,6 +60,7 @@ public class LumAnnotations {
         a_rec.annot_type = annot_doc.get("anno_type");
         a_rec.annot_range = annot_doc.get("anno_range");
         a_rec.annot_mode = annot_doc.get("anno_mode");
+        a_rec.annot_doc = annot_doc;
         annot_list.add(a_rec);
     }
     

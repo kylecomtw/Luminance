@@ -11,10 +11,11 @@ import java.util.List;
  *
  * @author Sean
  */
-public class LumToken {
+public class LumToken {    
     public String word;
     public String pos;
     public String ner;
-    public String dep;
+    public String depLabel;
+    public int    depGov = -1;
     public List<String> data;
 }
