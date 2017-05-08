@@ -6,13 +6,14 @@
 package tw.com.kyle.luminance;
 
 import java.util.List;
+import org.apache.lucene.analysis.Token;
 
 /**
  *
  * @author Sean
  */
 public class ConcordanceResult {
-    public Token target;
-    public List<Token> prec_context;
-    public List<Token> succ_context;
+    public LumToken target;
+    public List<LumToken> prec_context;
+    public List<LumToken> succ_context;
 }

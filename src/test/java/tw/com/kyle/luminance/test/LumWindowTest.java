@@ -113,7 +113,8 @@ public class LumWindowTest {
             LumWindow lumWin = new LumWindow(ref_doc, lum_reader);
             LumAnnotations annot_data = lumWin.GetAnnotationData();
             assertTrue(annot_data.hasSegmentation());
-            assertTrue(annot_data.hasPOSTagged());            
+            assertTrue(annot_data.hasPOSTagged());
+            assertTrue(annot_data.size() == 2);            
         } catch (IOException ex) {
             Logger.getLogger(LumWindowTest.class.getName()).log(Level.SEVERE, null, ex);
             fail("IOException thrown");

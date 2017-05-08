@@ -75,12 +75,16 @@ public class LumReader implements AutoCloseable {
         }
     }
 
+    public long GetDocUuid(Document doc) {
+        return LumUtils.BytesRefToLong(doc.getBinaryValue("uuid"));
+    }
+            
     public List<Long> getAnnotations(long ref_uuid) throws IOException {
         Document ref_doc = GetDocument(ref_uuid);
         if (ref_doc == null) {
             return null;
         }
-        if (!ref_doc.get("type").equals(LumIndexer.DOC_DISCOURSE)) {
+        if (!ref_doc.get("class").equals(LumIndexer.DOC_DISCOURSE)) {
             return null;
         }
 

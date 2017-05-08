@@ -5,16 +5,14 @@
  */
 package tw.com.kyle.luminance.coeus;
 
-import java.util.List;
 import tw.com.kyle.luminance.LumToken;
 
 /**
  *
  * @author Sean_S325
  */
-public class DocData {
-    public List<LumToken> token_list = null;
-    public List<LumTokenTree> token_tree = null;
-    public List<LumTokenDep> token_dep = null;
-    public TopicData topic_data = null;
+public class LumTokenDep {
+    public LumToken gov;
+    public LumToken dep;
+    public String rel;
 }

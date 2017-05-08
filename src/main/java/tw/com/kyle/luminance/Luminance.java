@@ -120,7 +120,7 @@ public class Luminance {
         Concordance concord = new Concordance(indexer.GetReaderOnly());
         JsonObject jobj = new JsonObject();
         List<ConcordanceResult> cr_list = concord.query(text, "annot", false);
-        Function<Token, JsonArray> map_token = (Token x)->{
+        Function<LumToken, JsonArray> map_token = (LumToken x)->{
             JsonObject x_obj = new JsonObject();
             x_obj.addProperty("text", x.word);
             x_obj.addProperty("pos", x.pos);
@@ -137,7 +137,7 @@ public class Luminance {
             a.addAll(b); return a;
         };
         
-        Function<List<Token>, JsonArray> jarr_pipeline = (List<Token> cr_x) -> 
+        Function<List<LumToken>, JsonArray> jarr_pipeline = (List<LumToken> cr_x) -> 
                         cr_x.stream()
                             .map((x)->map_token.apply(x))
                             .collect(Collectors.reducing(

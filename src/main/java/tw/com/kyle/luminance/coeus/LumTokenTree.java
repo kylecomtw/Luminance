@@ -5,14 +5,14 @@
  */
 package tw.com.kyle.luminance.coeus;
 
-import tw.com.kyle.luminance.Token;
+import java.util.List;
+import tw.com.kyle.luminance.LumToken;
 
 /**
  *
  * @author Sean_S325
  */
-public class TokenDep {
-    public Token gov;
-    public Token dep;
-    public String rel;
+public class LumTokenTree {
+    public LumToken head = null;
+    public List<LumToken> children = null;
 }

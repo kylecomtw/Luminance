@@ -3,16 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tw.com.kyle.luminance.coeus;
+package tw.com.kyle.luminance;
 
 import java.util.List;
-import tw.com.kyle.luminance.Token;
 
 /**
  *
- * @author Sean_S325
+ * @author Sean
  */
-public class TokenTree {
-    public Token head = null;
-    public List<Token> children = null;
+public class LumToken {
+    public String word;
+    public String pos;
+    public String ner;
+    public String dep;
+    public List<String> data;
 }

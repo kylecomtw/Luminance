@@ -5,16 +5,12 @@
  */
 package tw.com.kyle.luminance;
 
-import java.util.List;
-
 /**
  *
- * @author Sean
+ * @author Sean_S325
  */
-public class Token {
-    public String word;
-    public String pos;
-    public String ner;
-    public String dep;
-    public List<String> data;
+public class LumRange {
+    public int start_off = 0;
+    public int end_off = 0;
+    public String data = "";
 }
