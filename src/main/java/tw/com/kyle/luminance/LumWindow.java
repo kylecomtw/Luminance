@@ -26,7 +26,7 @@ public class LumWindow {
     private Logger logger = Logger.getLogger(LumWindow.class.getName());
     private IndexReader reader = null;
     private String ref_doc_content = null;
-    private Mappings targ_mappings = null;
+    // private Mappings targ_mappings = null;
     private Mappings ref_mappings = null;
     private IntFunction<Integer> min_guard = null;
     private IntFunction<Integer> max_guard = null;
@@ -51,10 +51,10 @@ public class LumWindow {
             LumReader lum_reader = new LumReader(reader);
             String doc_class = doc.get("class");
             if (doc_class.equals(LumIndexer.DOC_DISCOURSE)){
-                initialize_mappings(null, doc, lum_reader);
+                initialize_mappings(doc, lum_reader);
             } else {
                 Document ref_doc = lum_reader.getDocument(LumUtils.BytesRefToLong(doc.getBinaryValue("base_ref")));
-                initialize_mappings(doc, ref_doc, lum_reader);
+                initialize_mappings(ref_doc, lum_reader);
             }      
             
             min_guard = (int x) -> Math.max(0, x);
@@ -67,18 +67,11 @@ public class LumWindow {
         }
     }
     
-    private void initialize_mappings(Document targ_doc, Document ref_doc, LumReader lum_reader) 
+    private void initialize_mappings(Document ref_doc, LumReader lum_reader) 
             throws IOException {
-        if (ref_doc != null && targ_doc != null) {
+        if (ref_doc != null) {
             ref_doc_content = ref_doc.get("content");
             int ref_doc_id = lum_reader.getDocId(ref_doc);
-            ref_mappings = prepare_mappings(ref_doc_id, "content");
-
-            int targ_doc_id = LumUtils.GetDocId(targ_doc, reader);
-            targ_mappings = prepare_mappings(targ_doc_id, "anno");
-        } else if (ref_doc != null && targ_doc == null) {
-            ref_doc_content = ref_doc.get("content");
-            int ref_doc_id = LumUtils.GetDocId(ref_doc, reader);            
             ref_mappings = prepare_mappings(ref_doc_id, "content");
         } else {
             logger.severe("Mapping initialization error");
@@ -107,45 +100,24 @@ public class LumWindow {
     }
     
     private Integer[] map_to_target_position(int ref_soff, int ref_eoff){
-        int ref_spos = 0;
-        int ref_epos = 0;
-        
-        //! reference offset -> reference position
-        if (targ_mappings != null) {
-            ref_spos = targ_mappings.off_list.get(targ_mappings.pos_list.indexOf(ref_soff));
-            ref_epos = targ_mappings.off_list.get(targ_mappings.pos_list.indexOf(ref_eoff));
-        } else {
-            ref_spos = ref_soff;
-            ref_epos = ref_eoff;
-        }
-        
-        return new Integer[] {0, 0};
+        throw new UnsupportedOperationException();
     }
     
     private Integer[] map_to_reference_offset(int targ_spos, int targ_epos){
-        int targ_so = 0;
-        int targ_eo = 0;
+        //! target positions are reference positions        
         
-        //! target position -> target offset
-        if (targ_mappings != null) {
-            targ_so = targ_mappings.off_list.get(targ_mappings.pos_list.indexOf(targ_spos));
-            targ_eo = targ_mappings.off_list.get(targ_mappings.pos_list.indexOf(targ_epos));
-        } else {
-            //! when there is no 
-            targ_so = targ_spos;
-            targ_eo = targ_epos;
-        }
+        //! target position -> target offset        
                 
         if (ref_mappings == null) return new Integer[]{};
         
         //! target offset is in the same axis of ref position
         //! target offset ->  reference offset
-        int ref_so = ref_mappings.off_list.get(ref_mappings.pos_list.indexOf(targ_so));
+        int ref_so = ref_mappings.off_list.get(ref_mappings.pos_list.indexOf(targ_spos));
         int ref_eo = 0;
         try {
-            ref_eo = ref_mappings.off_list.get(ref_mappings.pos_list.indexOf(targ_eo) - 1) + 1;
+            ref_eo = ref_mappings.off_list.get(ref_mappings.pos_list.indexOf(targ_epos) - 1) + 1;
         } catch (IndexOutOfBoundsException ex) {
-            ref_eo = ref_mappings.off_list.get(ref_mappings.pos_list.indexOf(targ_eo));
+            ref_eo = ref_mappings.off_list.get(ref_mappings.pos_list.indexOf(targ_epos));
         }
         
         return new Integer[] {ref_so, ref_eo};

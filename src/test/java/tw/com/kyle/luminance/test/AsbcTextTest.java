@@ -3,8 +3,8 @@ package tw.com.kyle.luminance.test;
 
 import java.io.IOException;
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.Test;
+import static junit.framework.Assert.assertTrue;
+import org.junit.Test;
 import tw.com.kyle.luminance.LumIndexer;
 import tw.com.kyle.luminance.corpus.AsbcXmlAdaptor;
 import tw.com.kyle.luminance.corpus.AsbcXmlAdaptor.AsbcDocument;

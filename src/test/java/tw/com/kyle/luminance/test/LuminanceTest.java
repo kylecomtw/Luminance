@@ -5,9 +5,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import static junit.framework.Assert.assertTrue;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import tw.com.kyle.luminance.Luminance;
 
 /*
@@ -21,7 +22,7 @@ import tw.com.kyle.luminance.Luminance;
  * @author Sean_S325
  */
 public class LuminanceTest {
-    @Disabled @Test
+    @Ignore @Test
     public void testAddSimpleText() throws IOException{
         String INDEX_DIR = "h:/index_dir";
         Luminance.clean_index(INDEX_DIR);

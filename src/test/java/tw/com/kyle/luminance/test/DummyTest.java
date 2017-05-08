@@ -5,9 +5,9 @@
  */
 package tw.com.kyle.luminance.test;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static junit.framework.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
  */
 public class DummyTest {
         private boolean hasSetup = false;
-        @BeforeEach
+        @Before
         public void setup() {
             hasSetup = true;
             System.out.println("Test message");

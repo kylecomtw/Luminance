@@ -2,9 +2,9 @@ package tw.com.kyle.luminance.test;
 
 
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.Test;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+import org.junit.Test;
 import tw.com.kyle.luminance.TextUtils;
 
 /*

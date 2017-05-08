@@ -11,9 +11,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static junit.framework.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Test;
 import tw.com.kyle.luminance.Luminance;
 
 /**
@@ -23,7 +23,7 @@ import tw.com.kyle.luminance.Luminance;
 public class ConcordanceTest {  
     private String INDEX_DIR = "h:/index_dir";
     
-    @BeforeEach
+    @Before
     public void setUp() throws IOException {        
         Luminance.clean_index(INDEX_DIR);
         Luminance lum = new Luminance(INDEX_DIR);

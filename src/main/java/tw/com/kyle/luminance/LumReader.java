@@ -90,6 +90,10 @@ public class LumReader {
         
         return uuid_list;
     }
+    
+    public void close() throws IOException {
+        reader.close();
+    }
         
         
 }

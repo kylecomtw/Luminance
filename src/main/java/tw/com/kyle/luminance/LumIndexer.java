@@ -41,7 +41,7 @@ public class LumIndexer {
         if (!Files.exists(Paths.get(index_dir))) return;
         DirectoryStream<Path> stream = Files.newDirectoryStream(
                                         Paths.get(index_dir));
-        for(Path path: stream){
+        for(Path path: stream){            
             Files.delete(path);
         }
     }  
