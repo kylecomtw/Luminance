@@ -96,7 +96,7 @@ public class LumReader implements AutoCloseable {
             public void collect(int i) throws IOException {
                 BytesRef uuid_x = reader.document(i).getBinaryValue("uuid");
                 uuid_list.add(LumUtils.BytesRefToLong(uuid_x));
-                System.out.printf("%016x%n", uuid_list.get(uuid_list.size() - 1));
+                // System.out.printf("%016x%n", uuid_list.get(uuid_list.size() - 1));
             }
 
             @Override

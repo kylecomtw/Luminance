@@ -7,6 +7,7 @@ package tw.com.kyle.luminance;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.IntFunction;
 import java.util.logging.Level;
@@ -17,6 +18,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.document.Document;
+import tw.com.kyle.luminance.LumToken.LTField;
 
 /**
  *
@@ -81,38 +83,49 @@ public class LumWindow {
         }
     }
 
-    public List<LumToken> Reconstruct(int window_size, int ref_spos, int ref_epos) throws IOException {
-        int soff = min_guard.apply(ref_spos - window_size);
-        int eoff = max_guard.apply(ref_epos + window_size);
-        
+    public KwicResult Reconstruct(int window_size, int ref_soff, int ref_eoff) throws IOException {
+        KwicResult kwic = new KwicResult();
+        kwic.keyword = reconstruct_token_list(ref_soff, ref_eoff).get(0);
+        kwic.prec_context = reconstruct_token_list(
+                min_guard.apply(ref_soff - window_size),
+                max_guard.apply(ref_soff));
+        kwic.succ_context = reconstruct_token_list(
+                min_guard.apply(ref_eoff),
+                max_guard.apply(ref_eoff + window_size));
+        return kwic;
+    }
+
+    private List<LumToken> reconstruct_token_list(int soff, int eoff) throws IOException {
         long seg_uuid = lum_annot.getLatestUuid("seg");
         long pos_uuid = lum_annot.getLatestUuid("pos");
         long ner_uuid = lum_annot.getLatestUuid("ner");
-        
+
         LumTokensBuilder builder = new LumTokensBuilder();
+        builder.init(ref_doc_content.substring(soff, eoff), soff);
+        
         if (seg_uuid > 0) {
             List<LumRange> seg_range = ExtractLumRanges(seg_uuid, soff, eoff);
             builder.combines(seg_range);
         }
-        
-        if (pos_uuid > 0){
+
+        if (pos_uuid > 0) {
             List<LumRange> pos_range = ExtractLumRanges(pos_uuid, soff, eoff);
-            builder.combines(pos_range);
+            builder.combines(pos_range, LTField.POS);
         }
-        
-        if (ner_uuid > 0){
+
+        if (ner_uuid > 0) {
             List<LumRange> ner_range = ExtractLumRanges(ner_uuid, soff, eoff);
-            builder.combines(ner_range);
+            builder.combines(ner_range, LTField.NER);
         }
-        
+
         if (builder.nSeq() > 1) {
             logger.info("More than one sequence when reconstructing");
         }
         
         return builder.get(0);
+
     }
-    
-    //! TODO: fix position / offset
+
     public List<LumRange> ExtractLumRanges(long annot_uuid, int ref_soff, int ref_eoff) throws IOException {
         List<LumRange> range_data = lum_annot.GetLumRange(annot_uuid, this);
         List<LumRange> ext_range = range_data.stream()
@@ -152,20 +165,20 @@ public class LumWindow {
         if (tokenStream == null) {
             return null;
         }
-        
+
         OffsetAttribute offAttr = tokenStream.getAttribute(OffsetAttribute.class);
         CharTermAttribute chAttr = tokenStream.getAttribute(CharTermAttribute.class);
-        
-        tokenStream.reset();                
+
+        tokenStream.reset();
         List<LumRange> lr_list = new ArrayList<>();
         while (tokenStream.incrementToken()) {
             LumRange lr = new LumRange();
             lr.data = chAttr.toString();
-            lr.start_off = offAttr.startOffset();            
-            lr.end_off = offAttr.endOffset();            
+            lr.start_off = offAttr.startOffset();
+            lr.end_off = offAttr.endOffset();
             lr_list.add(lr);
         }
-        
+
         return lr_list;
     }
 

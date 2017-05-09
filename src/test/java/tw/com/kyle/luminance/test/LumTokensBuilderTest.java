@@ -21,7 +21,8 @@ public class LumTokensBuilderTest {
     @Test
     public void testCombines() {
         List<LumRange> rdata = new ArrayList<>();
-        LumTokensBuilder builder = new LumTokensBuilder();        
+        LumTokensBuilder builder = new LumTokensBuilder(); 
+        builder.init("012345", 0);
         rdata.add(make_range(0, 1, "A"));
         rdata.add(make_range(1, 3, "B"));
         rdata.add(make_range(3, 4, "C"));
@@ -44,7 +45,8 @@ public class LumTokensBuilderTest {
         rdata2.add(make_range(3, 4, "y"));
         rdata2.add(make_range(4, 6, "z"));
         
-        LumTokensBuilder builder = new LumTokensBuilder();                
+        LumTokensBuilder builder = new LumTokensBuilder(); 
+        builder.init("012345", 0);
         builder.combines(rdata1).combines(rdata2, LTField.POS);
         assertTrue(builder.toString().equals("A(w)\u3000B(x)\u3000C(y)\u3000D(z)"));
     }
@@ -62,9 +64,27 @@ public class LumTokensBuilderTest {
         rdata2.add(make_range(3, 4, "y"));        
         
         LumTokensBuilder builder = new LumTokensBuilder();                
+        builder.init("012345", 0);
         builder.combines(rdata1).combines(rdata2, LTField.POS);
         String str = builder.toString();
         assertTrue(str.equals("A\u3000B(x)\u3000C(y)\u3000D"));
+    }
+    
+    @Test
+    public void testRefCombines() {
+        List<LumRange> rdata1 = new ArrayList<>();                
+        rdata1.add(make_range(1, 3, "B"));        
+        rdata1.add(make_range(4, 6, "D"));
+        
+        List<LumRange> rdata2 = new ArrayList<>();                
+        rdata2.add(make_range(1, 3, "x"));
+        rdata2.add(make_range(4, 6, "y"));        
+        
+        LumTokensBuilder builder = new LumTokensBuilder();                
+        builder.init("01234567", 0);
+        builder.combines(rdata1).combines(rdata2, LTField.POS);
+        String str = builder.toString();
+        assertTrue(str.equals("0　B(x)　3　D(y)　6　7"));
     }
     
     private LumRange make_range(int so, int eo, String d) {

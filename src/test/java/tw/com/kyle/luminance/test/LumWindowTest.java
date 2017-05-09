@@ -18,10 +18,12 @@ import static junit.framework.Assert.fail;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.junit.Test;
+import tw.com.kyle.luminance.KwicResult;
 import tw.com.kyle.luminance.LumAnnotations;
 import tw.com.kyle.luminance.LumRange;
 
 import tw.com.kyle.luminance.LumReader;
+import tw.com.kyle.luminance.LumToken;
 import tw.com.kyle.luminance.LumWindow;
 import tw.com.kyle.luminance.Luminance;
 
@@ -37,7 +39,7 @@ public class LumWindowTest {
         try {
             Luminance.clean_index(INDEX_DIR);
             Luminance lum = new Luminance(INDEX_DIR);
-            String txt = String.join("",
+            String txt = String.join("\n",
                     Files.readAllLines(Paths.get("etc/test/simple_text.txt"), StandardCharsets.UTF_8));
             JsonObject elem = (JsonObject) lum.add_document(txt);
             lum.close();
@@ -118,7 +120,25 @@ public class LumWindowTest {
             Document targ_doc = lum_reader.GetDocumentByDocId(1);
             LumWindow lumWin = new LumWindow(targ_doc, lum_reader);
 
-            fail("Not implemented");
+            KwicResult kwic = lumWin.Reconstruct(5, 5, 7);
+            String str = kwic.toString();
+            assertTrue(str.equals("詞(Na)　是(SHI)　最(Dfa)　小(VH)　有(V_2)　<意義(Na)>　且(Cbb)　可以(D)　自由(VH)"));           
+        } catch (IOException ex) {
+            Logger.getLogger(LumWindowTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail("IOException thrown");
+        }
+    }
+    
+    @Test
+    public void testReconstruct_partial() {
+        setup();
+        try (LumReader lum_reader = new LumReader(INDEX_DIR);) {
+            Document targ_doc = lum_reader.GetDocumentByDocId(1);
+            LumWindow lumWin = new LumWindow(targ_doc, lum_reader);
+            
+            KwicResult kwic = lumWin.Reconstruct(7, 25, 27);
+            String str = kwic.toString();            
+            assertTrue(str.equals("位　。　任何(Neqa)　語言(Na)　處　<理>　系統(Na)　都(D)　必須(D)　先能(Nb)"));           
         } catch (IOException ex) {
             Logger.getLogger(LumWindowTest.class.getName()).log(Level.SEVERE, null, ex);
             fail("IOException thrown");
