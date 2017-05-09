@@ -6,24 +6,22 @@
 package tw.com.kyle.luminance;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.PostingsEnum;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.spans.SpanCollector;
 import org.apache.lucene.search.spans.SpanNearQuery;
@@ -32,8 +30,6 @@ import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.SpanWeight.Postings;
 import org.apache.lucene.search.spans.Spans;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
 
 /**
  *
@@ -42,14 +38,19 @@ import org.apache.lucene.store.FSDirectory;
 public class LumQuery implements AutoCloseable {
 
     private IndexReader idx_reader = null;
+    private LumReader lum_reader = null;
+    private IndexSearcher searcher = null;
 
-    public LumQuery(String index_dir) throws IOException {
-        Directory index = FSDirectory.open(Paths.get(index_dir));
-        idx_reader = DirectoryReader.open(index);
+    public LumQuery(String index_dir) throws IOException {        
+        lum_reader = new LumReader(index_dir);
+        idx_reader = lum_reader.GetReader();
+        searcher = new IndexSearcher(idx_reader);
     }
     
     public LumQuery(LumReader reader) throws IOException {
         idx_reader = reader.GetReader();
+        lum_reader = reader;
+        searcher = new IndexSearcher(idx_reader);
     }
     
     public int getTermFreq(String term, String field) throws IOException {
@@ -130,7 +131,39 @@ public class LumQuery implements AutoCloseable {
 
         return offs;
     }
-
+    
+    public List<Long> ListDocuments(int n_doc) throws IOException {
+        return ListDocuments(n_doc, new ScoreDoc[] {null});
+    }
+    
+    public List<Long> ListDocuments(int n_doc, ScoreDoc[] doc_ref) throws IOException {
+        Term term = new Term("class", LumIndexer.DOC_DISCOURSE);
+        TermQuery query = new TermQuery(term);      
+        TopDocs tops = null;
+        if (doc_ref.length == 0){
+            tops = searcher.search(query, n_doc);
+        } else {
+            tops = searcher.searchAfter(doc_ref[0], query, n_doc);
+        }
+        
+        List<Long> uuids = Arrays.stream(tops.scoreDocs).map((x)->{
+            try {
+                Document doc = lum_reader.GetDocumentByDocId(x.doc);
+                long uuid = lum_reader.GetDocUuid(doc);
+                return uuid;
+            } catch (IOException ex) {
+                Logger.getLogger(LumQuery.class.getName()).log(Level.SEVERE, null, ex);
+                return -1L;
+            }
+            }).collect(Collectors.toList());
+        
+        if (doc_ref.length > 0){
+            doc_ref[0] = tops.scoreDocs[tops.scoreDocs.length-1];
+        }
+        
+        return uuids;
+    }
+    
     public void ListTerm(int docId) throws IOException {
 
         Terms terms = idx_reader.getTermVector(docId, "content");
