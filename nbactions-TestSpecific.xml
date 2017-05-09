@@ -1,32 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <actions>
-        <action>
-            <actionName>debug.test.single</actionName>
-            <packagings>
-                <packaging>*</packaging>
-            </packagings>
-            <goals>
-                <goal>test-compile</goal>
-                <goal>surefire:test</goal>
-            </goals>
-            <properties>
-                <test>tw.com.kyle.luminance.test.LumWindowTest</test>
-                <forkMode>once</forkMode>
-                <maven.surefire.debug>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address}</maven.surefire.debug>
-                <jpda.listen>true</jpda.listen>
-            </properties>
-        </action>
-        <action>
-            <actionName>test.single</actionName>
-            <packagings>
-                <packaging>*</packaging>
-            </packagings>
-            <goals>
-                <goal>test-compile</goal>
-                <goal>surefire:test</goal>
-            </goals>
-            <properties>
-                <test>tw.com.kyle.luminance.test.LumWindowTest</test>
-            </properties>
-        </action>
-    </actions>
+    <action>
+        <actionName>debug.test.single</actionName>
+        <packagings>
+            <packaging>*</packaging>
+        </packagings>
+        <goals>
+            <goal>test-compile</goal>
+            <goal>surefire:test</goal>
+        </goals>
+        <properties>
+            <test>tw.com.kyle.luminance.test.ConcordanceTest#testConcordance_Grams</test>
+            <forkMode>once</forkMode>
+            <maven.surefire.debug>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address}</maven.surefire.debug>
+            <jpda.listen>true</jpda.listen>                
+        </properties>
+    </action>
+    <action>
+        <actionName>test.single</actionName>
+        <packagings>
+            <packaging>*</packaging>
+        </packagings>
+        <goals>
+            <goal>test-compile</goal>
+            <goal>surefire:test</goal>
+        </goals>
+        <properties>
+            <test>tw.com.kyle.luminance.test.ConcordanceTest#testConcordance_Grams</test>
+        </properties>
+    </action>
+</actions>

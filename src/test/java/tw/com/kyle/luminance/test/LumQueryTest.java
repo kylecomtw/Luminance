@@ -18,6 +18,8 @@ import static junit.framework.Assert.fail;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.junit.Test;
 import tw.com.kyle.luminance.LumQuery;
+import tw.com.kyle.luminance.LumReader;
+import tw.com.kyle.luminance.LumWindow;
 import tw.com.kyle.luminance.Luminance;
 
 /**
@@ -32,7 +34,7 @@ public class LumQueryTest {
         try {
             Luminance.clean_index(INDEX_DIR);
             Luminance lum = new Luminance(INDEX_DIR);
-            String txt = String.join("",
+            String txt = String.join("\n",
                     Files.readAllLines(Paths.get("etc/test/simple_text.txt"), StandardCharsets.UTF_8));
             JsonObject elem = (JsonObject) lum.add_document(txt);
             lum.close();
@@ -41,11 +43,11 @@ public class LumQueryTest {
             fail(ex.toString());
         }
     }
-    
+
     @Test
     public void testDiscourseQuery() {
-        try {
-            LumQuery query = new LumQuery(INDEX_DIR);
+        setup();
+        try (LumQuery query = new LumQuery(INDEX_DIR);) {                        
             List<Integer[]> offs = query.query_for_offsets("意", "content", false);
             assertTrue(offs.get(0)[0] == 0);  // docid
             assertTrue(offs.get(0)[1] == 5);  // start offset
@@ -53,7 +55,47 @@ public class LumQueryTest {
             
         } catch (IOException ex) {
             Logger.getLogger(LumQueryTest.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ParseException ex) {
+        }
+    }
+
+    @Test
+    public void testDiscourseNearQuery() {
+        setup();
+        try (LumQuery query = new LumQuery(INDEX_DIR);){                                    
+            List<Integer[]> offs = query.query_for_offsets("自動分詞", "content", true);
+            assertTrue(offs.get(0)[0] == 0);  // docid
+            assertTrue(offs.get(0)[1] == 78);  // start offset
+            assertTrue(offs.get(0)[2] == 82);  // end offset            
+
+        } catch (IOException ex) {
+            Logger.getLogger(LumQueryTest.class.getName()).log(Level.SEVERE, null, ex);
+        } 
+    }
+
+    @Test
+    public void testAnnoQuery() {
+        setup();     
+        try (LumQuery query = new LumQuery(INDEX_DIR);){                   
+            List<Integer[]> offs = query.query_for_offsets("意義", "anno", false);
+            assertTrue(offs.get(0)[0] == 1);  // docid
+            assertTrue(offs.get(0)[1] == 5);  // start offset
+            assertTrue(offs.get(0)[2] == 7);  // end offset
+
+        } catch (IOException ex) {
+            Logger.getLogger(LumQueryTest.class.getName()).log(Level.SEVERE, null, ex);
+        } 
+    }
+
+    @Test
+    public void testAnnoPosQuery() {
+        setup();        
+        try (LumQuery query = new LumQuery(INDEX_DIR);){                
+            List<Integer[]> offs = query.query_for_offsets("Neqa", "anno", false);
+            assertTrue(offs.get(0)[0] == 2);  // docid
+            assertTrue(offs.get(0)[1] == 20);  // start offset
+            assertTrue(offs.get(0)[2] == 22);  // end offset
+
+        } catch (IOException ex) {
             Logger.getLogger(LumQueryTest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

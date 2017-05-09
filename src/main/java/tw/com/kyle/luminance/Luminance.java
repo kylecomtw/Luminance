@@ -9,11 +9,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map.Entry;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.apache.lucene.util.BytesRef;
 
 /**
@@ -116,49 +112,25 @@ public class Luminance {
         return null;
     }
 
-    public JsonArray find_text(String text) throws IOException {                
-        Concordance concord = new Concordance(indexer.GetReaderOnly());
-        JsonObject jobj = new JsonObject();
-        List<ConcordanceResult> cr_list = concord.query(text, "annot", false);
-        Function<LumToken, JsonArray> map_token = (LumToken x)->{
-            JsonObject x_obj = new JsonObject();
-            x_obj.addProperty("text", x.word);
-            x_obj.addProperty("pos", x.pos);
-            if (x.data != null) x_obj.addProperty("data", String.join(", ", x.data));
-            if (x.ner != null) x_obj.addProperty("ner", x.ner);
-            if (x.depLabel != null) x_obj.addProperty("depLabel", x.depLabel);
-            if (x.depGov >= 0) x_obj.addProperty("depGov", x.depGov);
-            
-            JsonArray x_arr = new JsonArray();
-            x_arr.add(x_obj);
-            return x_arr;
-        };                
+    public JsonArray findWord(String text) throws IOException {                
+        try (LumReader reader = new LumReader(index_dir);) {
+            Concordance concord = new Concordance(reader);
+            return new KwicResult.KwicJsonList(concord.findWord(text)).toJson();
+        } 
+    }
         
-        BinaryOperator<JsonArray> combiner = (a, b) -> {
-            a.addAll(b); return a;
-        };
-        
-        Function<List<LumToken>, JsonArray> jarr_pipeline = (List<LumToken> cr_x) -> 
-                        cr_x.stream()
-                            .map((x)->map_token.apply(x))
-                            .collect(Collectors.reducing(
-                                     new JsonArray(), combiner));
-        
-        JsonArray cr_jarr = new JsonArray();
-        for(ConcordanceResult cr: cr_list){
-            JsonArray prec_arr = jarr_pipeline.apply(cr.prec_context);
-            JsonArray succ_arr = jarr_pipeline.apply(cr.succ_context);
-            JsonObject cr_obj = (JsonObject)map_token.apply(cr.target).get(0);
-            cr_obj.add("prec", prec_arr);
-            cr_obj.add("succ", succ_arr);
-            cr_jarr.add(cr_obj);
-        }
-        
-        return cr_jarr;
+    public JsonArray findGrams(String text) throws IOException {                
+        try (LumReader reader = new LumReader(index_dir);) {
+            Concordance concord = new Concordance(reader);
+            return new KwicResult.KwicJsonList(concord.findGrams(text)).toJson();
+        } 
     }
 
-    public JsonElement find_tag() {
-        return null;
+    public JsonArray findPos(String tag) throws IOException {
+        try (LumReader reader = new LumReader(index_dir);) {
+            Concordance concord = new Concordance(reader);
+            return new KwicResult.KwicJsonList(concord.findPos(tag)).toJson();
+        }   
     }
 
     public JsonElement sketch_text() {

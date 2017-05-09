@@ -83,26 +83,32 @@ public class LumWindow {
         }
     }
 
-    public KwicResult Reconstruct(int window_size, int ref_soff, int ref_eoff) throws IOException {
+    public KwicResult Reconstruct(int window_size, int ref_soff, int ref_eoff) {
         KwicResult kwic = new KwicResult();
-        kwic.keyword = reconstruct_token_list(ref_soff, ref_eoff).get(0);
-        kwic.prec_context = reconstruct_token_list(
-                min_guard.apply(ref_soff - window_size),
-                max_guard.apply(ref_soff));
-        kwic.succ_context = reconstruct_token_list(
-                min_guard.apply(ref_eoff),
-                max_guard.apply(ref_eoff + window_size));
+        try {
+            kwic.keyword = reconstruct_token_list(ref_soff, ref_eoff);
+            kwic.prec_context = reconstruct_token_list(
+                    min_guard.apply(ref_soff - window_size),
+                    max_guard.apply(ref_soff));
+            kwic.succ_context = reconstruct_token_list(
+                    min_guard.apply(ref_eoff),
+                    max_guard.apply(ref_eoff + window_size));
+        } catch (IOException ex) {
+            logger.severe(ex.toString());
+        }
         return kwic;
     }
 
     private List<LumToken> reconstruct_token_list(int soff, int eoff) throws IOException {
+        if (eoff - soff == 0) return new ArrayList<>();
+        
         long seg_uuid = lum_annot.getLatestUuid("seg");
         long pos_uuid = lum_annot.getLatestUuid("pos");
         long ner_uuid = lum_annot.getLatestUuid("ner");
 
         LumTokensBuilder builder = new LumTokensBuilder();
         builder.init(ref_doc_content.substring(soff, eoff), soff);
-        
+
         if (seg_uuid > 0) {
             List<LumRange> seg_range = ExtractLumRanges(seg_uuid, soff, eoff);
             builder.combines(seg_range);
@@ -121,7 +127,7 @@ public class LumWindow {
         if (builder.nSeq() > 1) {
             logger.info("More than one sequence when reconstructing");
         }
-        
+
         return builder.get(0);
 
     }

@@ -5,95 +5,69 @@
  */
 package tw.com.kyle.luminance;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.spans.SpanNearQuery;
-import org.apache.lucene.search.spans.SpanQuery;
-import org.apache.lucene.search.spans.SpanTermQuery;
-import org.apache.lucene.search.spans.SpanWeight;
-import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
 ;
 import java.util.List;
-import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.index.LeafReaderContext;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  *
- * @author Simport org.apache.lucene.document.Document;
-import org.apache.lucene.index.LeafReader;
-ean
+ * @author Simport org.apache.lucene.document.Document; import
+ * org.apache.lucene.index.LeafReader; ean
  */
-public class Concordance {    
-    IndexReader idx_reader = null;
-    public Concordance(IndexReader _reader){
-        idx_reader = _reader;
+
+
+public class Concordance {
+
+    LumReader reader = null;
+
+    public Concordance(LumReader r) {
+        reader = r;
+    }
+
+    public List<KwicResult> findWord(String probe) throws IOException {       
+        LumQuery query = new LumQuery(reader);
+        List<Integer[]> off_list = query.queryWord(probe);
+        List<KwicResult> kwic_list = build_kwic_list(off_list);
+        
+        return kwic_list;
+    }
+
+    public List<KwicResult> findGrams(String probe) throws IOException {
+        LumQuery query = new LumQuery(reader);
+        List<Integer[]> off_list = query.queryGrams(probe);
+        List<KwicResult> kwic_list = build_kwic_list(off_list);
+        
+        return kwic_list;
+    }
+
+    public List<KwicResult> findPos(String probe) throws IOException {
+        LumQuery query = new LumQuery(reader);
+        List<Integer[]> off_list = query.queryPos(probe);
+        List<KwicResult> kwic_list = build_kwic_list(off_list);
+        
+        return kwic_list;
     }
     
-    public List<ConcordanceResult> query(String term, String field, boolean useNearQuery) 
-        throws IOException{
-        
-        List<ConcordanceResult> con_list = new ArrayList<>();
-        
-        if (term.length() == 0) return null;
-        
-        SpanQuery sq = null;
-        if(!useNearQuery){
-            sq = new SpanTermQuery(new Term(field, term));        
-        } else {
-        
-            SpanNearQuery.Builder builder = new SpanNearQuery.Builder(field, true);
-            for(int i = 0; i < term.length(); ++i){
-                builder.addClause(new SpanTermQuery(new Term(field, term.substring(i,i+1))));
-            }        
-            sq = builder.build();
+    private List<KwicResult> build_kwic_list(List<Integer[]> off_list) throws IOException {
+        List<KwicResult> kwic_list = new ArrayList<>();
+        Map<Integer, List<Integer[]>> doc_map = off_list.stream()
+                .collect(Collectors.groupingBy((Integer[] x) -> x[0], Collectors.toList()));
+        List<Integer> doc_list = doc_map.keySet().stream().sorted().collect(Collectors.toList());
+        for (int docid_x : doc_list) {
+            Document doc = reader.GetDocumentByDocId(docid_x);
+            LumWindow lumWin = new LumWindow(doc, reader);
+            List<KwicResult> kwics = doc_map.get(docid_x).stream()
+                    .map((x) -> lumWin.Reconstruct(10, x[1], x[2]))
+                    .collect(Collectors.toList());
+            kwic_list.addAll(kwics);
         }
-            
-        IndexSearcher searcher = new IndexSearcher(idx_reader);
-        for (LeafReaderContext ctx : idx_reader.leaves()) {                        
-            
-            SpanWeight weights = sq.createWeight(searcher, false);
-            if(weights == null) continue;
-            Spans spans = weights.getSpans(ctx, SpanWeight.Postings.POSITIONS);
-            if (spans == null){
-                System.out.printf("Nothing found for %s%n", term);
-                continue;
-            }
-            int nxtDoc = 0;
-            
-            LeafReader leaf_reader = ctx.reader();
-            while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {     
-                
-                String doc_content = leaf_reader.document(nxtDoc).get(field);                
-                Document targ_doc = leaf_reader.document(nxtDoc);
-                String base_ref = leaf_reader.document(nxtDoc).get("baseref");                
-                
-                long base_uuid = 0;
-                LumWindow lumWin = new LumWindow(targ_doc, new LumReader(idx_reader));                
-
-                while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {                                        
-                    int[] span_arr = {spans.startPosition(), spans.endPosition()};
-
-                    System.out.printf("%d, %d, %d%n", nxtDoc, span_arr[0], span_arr[1]); 
-                    System.out.printf("%s%n", lumWin.GetWindow(5, span_arr[0], span_arr[1]));
-                    ConcordanceResult concord = new ConcordanceResult();
-                    String[] win_arr = lumWin.GetWindowAsArray(5, span_arr[0], span_arr[1]);
-                    // concord.prec_context = win_arr[0];
-                    // concord.target = win_arr[1];
-                    // concord.succ_context = win_arr[2];
-                    con_list.add(concord);
-                }                                              
-                
-            }
-            
-            
-        }
-
-        // OffsetTermVectorMapper tvm = new OffsetTermVectorMapper();
-        return con_list;
+        
+        return kwic_list;
     }
 }

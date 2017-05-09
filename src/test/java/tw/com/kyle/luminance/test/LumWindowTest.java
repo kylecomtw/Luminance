@@ -138,7 +138,7 @@ public class LumWindowTest {
             
             KwicResult kwic = lumWin.Reconstruct(7, 25, 27);
             String str = kwic.toString();            
-            assertTrue(str.equals("位　。　任何(Neqa)　語言(Na)　處　<理>　系統(Na)　都(D)　必須(D)　先能(Nb)"));           
+            assertTrue(str.equals("位　。　任何(Neqa)　語言(Na)　處　<理　的(DE)>　系統(Na)　都(D)　必須(D)　先能(Nb)"));           
         } catch (IOException ex) {
             Logger.getLogger(LumWindowTest.class.getName()).log(Level.SEVERE, null, ex);
             fail("IOException thrown");

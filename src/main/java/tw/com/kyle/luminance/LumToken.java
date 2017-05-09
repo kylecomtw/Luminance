@@ -5,6 +5,8 @@
  */
 package tw.com.kyle.luminance;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -71,6 +73,26 @@ public class LumToken {
         }
     }
 
+    public JsonObject toJson() {
+        JsonObject x_obj = new JsonObject();
+        x_obj.addProperty("text", word);
+        x_obj.addProperty("pos", pos);
+        if (data != null) {
+            x_obj.addProperty("data", String.join(", ", data));
+        }
+        if (ner != null) {
+            x_obj.addProperty("ner", ner);
+        }
+        if (depLabel != null) {
+            x_obj.addProperty("depLabel", depLabel);
+        }
+        if (depGov >= 0) {
+            x_obj.addProperty("depGov", depGov);
+        }
+
+        return x_obj;
+    }
+
     public static class LumTokenListStringBuilder {
 
         private List<LumToken> tok_list = null;
@@ -81,10 +103,19 @@ public class LumToken {
 
         @Override
         public String toString() {
-            if (tok_list == null) {return "";}
+            if (tok_list == null) {
+                return "";
+            }
             return String.join("\u3000", tok_list.stream()
                     .map((LumToken x) -> x.toString())
                     .collect(Collectors.toList()));
+        }
+
+        public JsonArray toJsonArray() {
+            JsonArray jarr = new JsonArray();
+            tok_list.stream().map((x) -> x.toJson())
+                    .forEach((x) -> jarr.add(x));
+            return jarr;
         }
     }
 }

@@ -39,39 +39,36 @@ import org.apache.lucene.store.FSDirectory;
  *
  * @author Sean_S325
  */
-public class LumQuery {
+public class LumQuery implements AutoCloseable {
 
     private IndexReader idx_reader = null;
 
-    public LumQuery(String index_dir) throws IOException, ParseException {
+    public LumQuery(String index_dir) throws IOException {
         Directory index = FSDirectory.open(Paths.get(index_dir));
         idx_reader = DirectoryReader.open(index);
-
     }
-
-    public void query(String query_str) throws ParseException, IOException {
-        StandardAnalyzer analyzer = new StandardAnalyzer();
-        Query q = new QueryParser("content", analyzer).parse(query_str);
-        int hitsPerPage = 10;
-        IndexSearcher searcher = new IndexSearcher(idx_reader);
-        TopDocs docs = searcher.search(q, hitsPerPage);
-        ScoreDoc[] hits = docs.scoreDocs;
-
-        System.out.println("Found " + hits.length + "hits. ");
-        for (int i = 0; i < hits.length; ++i) {
-            int docId = hits[i].doc;
-            Document d = searcher.doc(docId);
-            System.out.println(d.get("content"));
-            // System.out.println((i + 1) + ". " + d.get("isbn") + "\t" + d.get("title"));
-        }
-
+    
+    public LumQuery(LumReader reader) throws IOException {
+        idx_reader = reader.GetReader();
     }
-
+    
     public int getTermFreq(String term, String field) throws IOException {
         Term term_inst = new Term(field, term);
         return (int) (idx_reader.totalTermFreq(term_inst));
     }
-
+    
+    public List<Integer[]> queryGrams(String term) throws IOException {
+        return query_for_offsets(term, "content", term.length() > 1);
+    }
+    
+    public List<Integer[]> queryWord(String word) throws IOException {
+        return query_for_offsets(word, "anno", false);
+    }
+    
+    public List<Integer[]> queryPos(String pos) throws IOException {
+        return query_for_offsets(pos, "anno", false);
+    }
+    
     public List<Integer[]> query_for_offsets(String term, String field, boolean useNearQuery) throws IOException {
         if (term.length() == 0) {
             return null;
@@ -107,21 +104,24 @@ public class LumQuery {
             while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {
                 final int doc_id = nxtDoc;
                 while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                    final int start_pos = spans.startPosition();
+                    final int end_pos = spans.endPosition();
+                    Integer[] off_x = new Integer[] {doc_id, -1, -1};
                     spans.collect(new SpanCollector() {
                         @Override
                         public void collectLeaf(PostingsEnum pe, int i, Term term) throws IOException {
                             int s_off = pe.startOffset();
-                            int e_off = pe.endOffset();
-                            offs.add(new Integer[]{doc_id, s_off, e_off});
+                            int e_off = pe.endOffset();                
+                            if (i == start_pos) off_x[1] = s_off;
+                            if (i+1 == end_pos) off_x[2] = e_off;
                         }
 
                         @Override
                         public void reset() {
                             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                         }
-
                     });
-
+                    offs.add(off_x);
                 }
 
             }
@@ -129,61 +129,6 @@ public class LumQuery {
         }
 
         return offs;
-    }
-
-    public int span_query(String term, String field, boolean useNearQuery) throws IOException {
-        if (term.length() == 0) {
-            return -1;
-        }
-
-        SpanQuery sq = null;
-        if (!useNearQuery) {
-            sq = new SpanTermQuery(new Term(field, term));
-        } else {
-
-            SpanNearQuery.Builder builder = new SpanNearQuery.Builder(field, true);
-            for (int i = 0; i < term.length(); ++i) {
-                builder.addClause(new SpanTermQuery(new Term(field, term.substring(i, i + 1))));
-            }
-            sq = builder.build();
-        }
-
-        IndexSearcher searcher = new IndexSearcher(idx_reader);
-        for (LeafReaderContext ctx : idx_reader.leaves()) {
-
-            SpanWeight weights = sq.createWeight(searcher, false);
-            if (weights == null) {
-                continue;
-            }
-            Spans spans = weights.getSpans(ctx, Postings.POSITIONS);
-            if (spans == null) {
-                System.out.printf("Nothing found for %s%n", term);
-                continue;
-            }
-            int nxtDoc = 0;
-
-            LeafReader leaf_reader = ctx.reader();
-            while ((nxtDoc = spans.nextDoc()) != Spans.NO_MORE_DOCS) {
-
-                String doc_content = leaf_reader.document(nxtDoc).get(field);
-                Document targ_doc = leaf_reader.document(nxtDoc);
-                String base_ref = leaf_reader.document(nxtDoc).get("baseref");
-
-                long base_uuid = 0;
-                LumWindow lumWin = new LumWindow(targ_doc, new LumReader(idx_reader));
-
-                while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
-                    int[] span_arr = {spans.startPosition(), spans.endPosition()};
-
-                    System.out.printf("%d, %d, %d%n", nxtDoc, span_arr[0], span_arr[1]);
-                    System.out.printf("%s%n", lumWin.GetWindow(5, span_arr[0], span_arr[1]));
-                }
-
-            }
-        }
-
-        // OffsetTermVectorMapper tvm = new OffsetTermVectorMapper();
-        return 0;
     }
 
     public void ListTerm(int docId) throws IOException {
@@ -203,6 +148,7 @@ public class LumQuery {
         }
     }
 
+    @Override
     public void close() throws IOException {
         idx_reader.close();
     }
