@@ -63,7 +63,16 @@ public class LumReader implements AutoCloseable {
     public Document GetDocumentByDocId(int doc_id) throws IOException {
         return reader.document(doc_id);
     }
-
+    
+    public String GetPlainText(long uuid) throws IOException{
+        Document doc = GetDocument(uuid);
+        if (doc.get("class").equals(LumIndexer.DOC_ANNOTATION)){            
+            return null;
+        }
+        
+        return doc.get("content");
+    }
+    
     public int getDocId(Document doc) throws IOException {
         BytesRef bref = doc.getBinaryValue("uuid");
         TermQuery q = new TermQuery(new Term("uuid", bref));

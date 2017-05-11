@@ -24,10 +24,11 @@ import java.util.logging.Logger;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.DateTools.Resolution;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.util.BytesRef;
+import tw.com.kyle.luminance.AnnotationProvider;
 import tw.com.kyle.luminance.FieldTypeFactory;
 import tw.com.kyle.luminance.LumIndexer;
 import tw.com.kyle.luminance.FieldTypeFactory.FTEnum;
+import tw.com.kyle.luminance.LumDocument;
 
 /**
  *
@@ -119,27 +120,25 @@ public class PttJsonAdaptor implements LumIndexInterface {
         }
         
         for(PttArticle art: art_list){
-            Document base_doc = indexer.CreateIndexDocument(LumIndexer.DOC_DISCOURSE);
-            indexer.AddField(base_doc, "author", art.author, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
-            indexer.AddField(base_doc, "title", art.title, FieldTypeFactory.Get(FTEnum.RawStoredIndex));            
-            indexer.AddField(base_doc, "timestamp", lucene_date_format(art.postTime), FieldTypeFactory.Get(FTEnum.RawStoredIndex));
-            indexer.AddField(base_doc, "timestamp", new BytesRef(lucene_date_format(art.postTime)), FieldTypeFactory.Get(FTEnum.TimestampIndex));
-            indexer.AddField(base_doc, "url", art.url, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
-            indexer.AddField(base_doc, "content", art.content, FieldTypeFactory.Get(FTEnum.FullIndex));
-            
-            BytesRef base_doc_ref = indexer.GetUUIDAsBytesRef(base_doc);
-            indexer.AddToIndex(base_doc);
-            
+            AnnotationProvider annot_prov = new AnnotationProvider(art.content);
+            annot_prov.AddSupplementData("author", art.author);
+            annot_prov.AddSupplementData("title", art.title);
+            annot_prov.SetBaseTimestamp(art.postTime);            
+            annot_prov.AddSupplementData("url", art.url);                        
+                                                
             for(PttComment com: art.comments){
-                Document com_doc_x = indexer.CreateIndexDocument(LumIndexer.DOC_FRAGMENT);                
-                indexer.AddField(com_doc_x, "base_ref", base_doc_ref, FieldTypeFactory.Get(FTEnum.RawStoredIndex));                
-                indexer.AddField(com_doc_x, "timestamp", lucene_date_format(art.postTime), FieldTypeFactory.Get(FTEnum.RawStoredIndex));
-                indexer.AddField(com_doc_x, "author", com.author, FieldTypeFactory.Get(FTEnum.RawStoredIndex));
-                indexer.AddField(com_doc_x, "content", com.comment, FieldTypeFactory.Get(FTEnum.FullIndex));
-                indexer.AddField(com_doc_x, "valence", String.valueOf(com.valence), FieldTypeFactory.Get(FTEnum.RawStoredIndex));
-                indexer.AddToIndex(com_doc_x);
+                LumDocument frag = new LumDocument();
+                frag.SetBaseRef(annot_prov.GetRefUuid());
+                frag.SetDocMode(LumDocument.FRAG);                
+                frag.SetTimestamp(art.postTime);
+                frag.AddSuppData("author", com.author);
+                frag.AddSuppData("valence", String.valueOf(com.valence));                
+                annot_prov.AddLumDocument(frag);
             }                                                        
+            annot_prov.Index(indexer);
         }
+        
+        
                 
     }
     

@@ -15,46 +15,40 @@ import java.util.logging.Logger;
  * @author Sean_S325
  */
 public class LumDocumentAdapter {
-    public static LumDocument FromReader(BufferedReader reader){        
+
+    public static LumDocument FromText(String text) {
         LumDocument doc = new LumDocument();
-        try {
-            String line = reader.readLine();
-            StringBuilder sb = new StringBuilder();
-            while(line != null){
-                if (line.startsWith("#")){
-                    String[] toks = line.split(":");
-                    if (toks.length <= 2) {
-                        line = reader.readLine();
-                        continue;
-                    }
-                    switch(toks[0].trim().toLowerCase()){
-                        case "doctype":
-                            doc.SetDocType(toks[1].trim());
-                            break;
-                        case "docclass":
-                            doc.SetDocClass(toks[1].trim());
-                            break;
-                        case "baseref":
-                            doc.SetBaseRef(toks[1].trim());
-                            break;
-                        default:
-                            break;
-                    }
-                    
-                } else {
-                    sb.append(line.trim());
+        String[] lines = text.split("[\r\n]");
+
+        StringBuilder sb = new StringBuilder();
+        for (String line : lines) {
+            if (line.startsWith("#")) {
+                String[] toks = line.split(":");
+                if (toks.length <= 2) {
+                    continue;
                 }
-                line = reader.readLine();                
+
+                switch (toks[0].trim().toLowerCase()) {
+                    case "anno_name":
+                        doc.SetAnnoName(toks[1].trim());
+                        break;
+                    case "anno_type":
+                        doc.SetAnnoType(toks[1].trim());
+                        break;
+                    case "base_ref":
+                        doc.SetBaseRef(Long.valueOf(toks[1].trim()));
+                        break;
+                    default:
+                        break;
+                }
+
+            } else {
+                sb.append(line.trim());
             }
-            doc.SetContent(sb.toString());
-            return doc;
-        } catch (IOException ex) {
-            Logger.getLogger(LumDocumentAdapter.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
         }
-    }
-    
-    public static LumDocument FromJson(String json_str){
-        return new LumDocument();
+
+        doc.SetContent(sb.toString());
+        return doc;
+
     }
 }

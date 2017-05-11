@@ -10,7 +10,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.util.BytesRef;
 
 /**
@@ -39,85 +41,28 @@ public class Luminance {
 
     public JsonElement add_document(String text) throws IOException {
 
-        JsonObject ret = null;
-        if (TextUtils.is_segmented(text)) {
-            ret = add_plain_text(TextUtils.extract_raw_text(text));
-            String base_uuid = ret.get("uuid").getAsString();
-            JsonObject annot_ret = add_annotation(text, base_uuid);
-            for (Entry<String, JsonElement> ent : annot_ret.entrySet()) {
-                ret.add(ent.getKey(), ent.getValue());
-            }
-        } else {
-            ret = add_plain_text(text);
-        }
-
+        JsonObject ret = new JsonObject();
+        AnnotationProvider annot_prov = new AnnotationProvider(text);
+        indexer.open();
+        for(LumDocument lum_doc: annot_prov.IndexableDocuments()){            
+            indexer.index_doc(lum_doc);
+        }        
+        
+        ret.addProperty("uuid", annot_prov.GetRefUuid());
         return ret;
     }
-
-    public JsonObject add_plain_text(String text) throws IOException {
-        indexer.open();
-        org.apache.lucene.document.Document base_doc = indexer.CreateIndexDocument(LumIndexer.DOC_DISCOURSE);
-        indexer.AddField(base_doc, "title", "", FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
-        indexer.AddField(base_doc, "timestamp", LumUtils.get_lucene_timestamp(), FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
-        indexer.AddField(base_doc, "timestamp", new BytesRef(LumUtils.get_lucene_timestamp()), FieldTypeFactory.Get(FieldTypeFactory.FTEnum.TimestampIndex));
-        indexer.AddField(base_doc, "content", text, FieldTypeFactory.Get(FieldTypeFactory.FTEnum.FullIndex));
-
-        BytesRef base_doc_ref = indexer.GetUUIDAsBytesRef(base_doc);
-        indexer.AddToIndex(base_doc);
-
-        JsonObject jObj = new JsonObject();
-        jObj.addProperty("uuid", Long.toHexString(LumUtils.BytesRefToLong(base_doc_ref)));
-        return jObj;
-    }
-
-    public JsonObject add_annotation(String text, String base_uuid) throws IOException {
-        indexer.open();
-        AnnotationProvider annot = new AnnotationProvider(text);
-        BytesRef base_doc_ref = LumUtils.LongToBytesRef(Long.parseLong(base_uuid, 16));
+    
+    public JsonObject get_annotation_template(long uuid) throws IOException {
+        LumReader reader = new LumReader(index_dir);        
+        StringBuilder sb = new StringBuilder();
+        sb.append("# uuid: ");
+        sb.append(uuid); sb.append("\n");        
+        sb.append(reader.GetPlainText(uuid));
+        
         JsonObject jobj = new JsonObject();
-        if (annot.has_segmented()) {
-            LumDocument seg_doc = annot.create_annot_doc_seg(base_doc_ref);
-            org.apache.lucene.document.Document seg_adoc = indexer.CreateIndexDocument(LumIndexer.DOC_ANNOTATION);
-            setup_index_annot_document(indexer, seg_adoc, "seg", seg_doc.GetContent(), base_doc_ref);
-            indexer.AddToIndex(seg_adoc);
-
-            BytesRef seg_doc_ref = indexer.GetUUIDAsBytesRef(seg_adoc);
-            jobj.addProperty("seg", Long.toHexString(LumUtils.BytesRefToLong(seg_doc_ref)));
-        }
-
-        if (annot.has_pos_tagged()) {
-            LumDocument pos_doc = annot.create_annot_doc_pos(base_doc_ref);
-            org.apache.lucene.document.Document pos_adoc = indexer.CreateIndexDocument(LumIndexer.DOC_ANNOTATION);
-            setup_index_annot_document(indexer, pos_adoc, "pos", pos_doc.GetContent(), base_doc_ref);
-            indexer.AddToIndex(pos_adoc);
-
-            BytesRef seg_doc_ref = indexer.GetUUIDAsBytesRef(pos_adoc);
-            jobj.addProperty("pos", Long.toHexString(LumUtils.BytesRefToLong(seg_doc_ref)));
-        }
-
-        return jobj;
-    }
-
-    public JsonObject add_tag_annotation(String text, String anno_type, String base_uuid) throws IOException {
-        indexer.open();
-        AnnotationProvider annot = new AnnotationProvider(text);
-        BytesRef base_doc_ref = LumUtils.LongToBytesRef(Long.parseLong(base_uuid, 16));
-        JsonObject jobj = new JsonObject();
-        if (annot.has_pos_tagged()) {
-            LumDocument pos_doc = annot.create_annot_doc_pos(base_doc_ref);
-            org.apache.lucene.document.Document pos_adoc = indexer.CreateIndexDocument(LumIndexer.DOC_ANNOTATION);
-            setup_index_annot_document(indexer, pos_adoc, anno_type, pos_doc.GetContent(), base_doc_ref);
-            indexer.AddToIndex(pos_adoc);
-
-            BytesRef seg_doc_ref = indexer.GetUUIDAsBytesRef(pos_adoc);
-            jobj.addProperty(anno_type, Long.toHexString(LumUtils.BytesRefToLong(seg_doc_ref)));
-        }
+        jobj.addProperty("anno.templ", sb.toString());
         
         return jobj;
-    }
-
-    public JsonElement get_annotation_template() {
-        return null;
     }
 
     public JsonArray list_documents() throws IOException {
@@ -132,8 +77,14 @@ public class Luminance {
         return null;
     }
 
-    public JsonElement get_annotation() {
-        return null;
+    public JsonArray get_annotations(long uuid) throws IOException {
+        JsonArray jarr = new JsonArray();
+        try (LumReader reader = new LumReader(index_dir);) {
+            List<Long> uuids = reader.getAnnotations(uuid);
+            uuids.stream().forEach((x)->jarr.add(x));
+        }
+        
+        return jarr;
     }
 
     public JsonArray findWord(String text) throws IOException {

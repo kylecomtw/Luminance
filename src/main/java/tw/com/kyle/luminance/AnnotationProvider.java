@@ -23,83 +23,112 @@ import org.apache.lucene.util.BytesRef;
  * @author Sean_S325
  */
 public class AnnotationProvider {
-
-    private boolean is_segmented = false;
-    private boolean is_pos_tagged = false;
-    private boolean is_ner_tagged = false;
-    private String annot_text = "";
+    
+    private long anno_ref_uuid = -1;
     private LumPositionMap pos_map = null;
+    private List<LumDocument> doc_list = new ArrayList<>();
+    
     private Logger logger = Logger.getLogger(AnnotationProvider.class.getName());
-
-    public boolean has_segmented() {
-        return is_segmented;
-    }
-
-    public boolean has_pos_tagged() {
-        return is_pos_tagged;
-    }
-
-    public boolean has_ner_tagged() {
-        return is_ner_tagged;
-    }
-
-    public AnnotationProvider(String annots) {
-        is_segmented = TextUtils.is_segmented(annots);
-        is_pos_tagged = TextUtils.is_pos_tagged(annots);
-        annot_text = annots;
+    
+    public AnnotationProvider(String inputs) {
         try {
-            pos_map = LumPositionMap.Get(TextUtils.extract_raw_text(annot_text));
+            pos_map = LumPositionMap.Get(TextUtils.extract_raw_text(inputs));
+            if (inputs.substring(0, 100).replace(" ", "").contains("#baseref:")) {
+                //! this is a anno doc format
+                LumDocument lum_doc = LumDocumentAdapter.FromText(inputs);
+                List<String[]> annot_data = TextUtils.extract_pos_annot(inputs);
+                String anno_content = transform_to_annot_format(annot_data);                
+                lum_doc.SetContent(anno_content);
+                doc_list.add(lum_doc);
+                
+            } else {
+                //! it is a plain text, extract all informations we can
+                build_anno_doc_list(inputs);
+            }
         } catch (IOException ex) {
             logger.severe(ex.toString());
+            doc_list.add(new LumDocument());
+        }
+        
+    }
+        
+    public long GetRefUuid() { 
+        if (doc_list.get(0).GetDocClass().equals(LumDocument.DISCOURSE)) {
+            return doc_list.get(0).GetUuid();
+        } else {
+            return doc_list.get(0).GetBaseRef();
         }
     }
-
-    public LumDocument create_discourse_doc() {
+    
+    public void SetBaseTimestamp(String timestamp) {
+        doc_list.get(0).SetTimestamp(timestamp);
+    }
+    
+    public void AddLumDocument(LumDocument doc){
+        doc_list.add(doc);
+    }
+    
+    private void build_anno_doc_list(String inputs) {
+        LumDocument base_doc = create_discourse_doc(inputs);
+        doc_list.add(base_doc);
+        long ref_uuid = base_doc.GetUuid();
+        if (TextUtils.is_segmented(inputs)) {
+            doc_list.add(create_annot_doc_seg(ref_uuid, inputs));
+        }
+        
+        if (TextUtils.is_pos_tagged(inputs)) {
+            doc_list.add(create_annot_doc_pos(ref_uuid, inputs));
+        }
+    }
+    
+    public LumDocument create_discourse_doc(String inputs) {
         LumDocument lum_doc = new LumDocument();
-        lum_doc.SetDocType(LumDocument.DISCOURSE);
-        lum_doc.SetContent(TextUtils.extract_raw_text(annot_text));
-        return lum_doc;
-    }
-
-    public LumDocument create_annot_doc_seg(BytesRef b_doc_uuid) {
-        if (!is_segmented) {
-            return null;
-        }
-        
-        long doc_uuid = LumUtils.BytesRefToLong(b_doc_uuid);        
-        List<String[]> annot_data = TextUtils.extract_seg_annot(annot_text);
-        String anno_content = transform_to_annot_format(annot_data);
-        
-        LumDocument lum_doc = build_lumDocument(doc_uuid, anno_content);
-
-        return lum_doc;
-    }
-
-    public LumDocument create_annot_doc_pos(BytesRef b_doc_uuid) {
-        if (!is_pos_tagged) {
-            return null;
-        }
-
-        long doc_uuid = LumUtils.BytesRefToLong(b_doc_uuid);
-        List<String[]> annot_data = TextUtils.extract_pos_annot(annot_text);
-        String anno_content = transform_to_annot_format(annot_data);
-
-        LumDocument lum_doc = build_lumDocument(doc_uuid, anno_content);
-
+        lum_doc.SetDocClass(LumDocument.DISCOURSE);
+        lum_doc.SetContent(TextUtils.extract_raw_text(inputs));
         return lum_doc;
     }
     
-    public LumDocument create_annot_doc_tag(BytesRef b_doc_uuid){
-        if (!is_pos_tagged) {
-            return null;            
+    public List<LumDocument> IndexableDocuments() {
+        return doc_list;
+    }
+    
+    public void AddSupplementData(String key, String value) {
+        LumDocument doc = doc_list.get(0);
+        doc.AddSuppData(key, value);
+    }
+    
+    public void Index(LumIndexer indexer) throws IOException {
+        for(LumDocument doc: doc_list){
+            indexer.index_doc(doc);
         }
-        
-        long doc_uuid = LumUtils.BytesRefToLong(b_doc_uuid);
-        List<String[]> annot_data = TextUtils.extract_pos_annot(annot_text);
+    }
+    
+    private LumDocument create_annot_doc_seg(long ref_uuid, String inputs) {        
+        List<String[]> annot_data = TextUtils.extract_seg_annot(inputs);
         String anno_content = transform_to_annot_format(annot_data);
-
-        LumDocument lum_doc = build_lumDocument(doc_uuid, anno_content);
-
+        
+        LumDocument lum_doc = build_lumDocument(ref_uuid, anno_content);
+        lum_doc.SetAnnoName("anno-seg-extracted");
+        lum_doc.SetAnnoType("seg");
+        return lum_doc;
+    }
+    
+    private LumDocument create_annot_doc_pos(long ref_uuid, String inputs) {
+        List<String[]> annot_data = TextUtils.extract_pos_annot(inputs);
+        String anno_content = transform_to_annot_format(annot_data);
+        
+        LumDocument lum_doc = build_lumDocument(ref_uuid, anno_content);
+        lum_doc.SetAnnoName("anno-pos-extracted");
+        lum_doc.SetAnnoType("pos");
+        return lum_doc;
+    }
+    
+    private LumDocument create_annot_doc_tag(long ref_uuid, String inputs) {
+        List<String[]> annot_data = TextUtils.extract_pos_annot(inputs);
+        String anno_content = transform_to_annot_format(annot_data);
+        
+        LumDocument lum_doc = build_lumDocument(ref_uuid, anno_content);        
+        lum_doc.SetAnnoType("tag");
         return lum_doc;
     }
     
@@ -111,8 +140,8 @@ public class AnnotationProvider {
     
     private LumDocument build_lumDocument(long doc_uuid, String anno_content) {
         LumDocument lum_doc = new LumDocument();
-        lum_doc.SetDocType(LumDocument.ANNO);
-        lum_doc.SetBaseRef(Long.toHexString(doc_uuid));
+        lum_doc.SetDocClass(LumDocument.ANNO);        
+        lum_doc.SetBaseRef(doc_uuid);
         lum_doc.SetContent(anno_content);
         
         return lum_doc;

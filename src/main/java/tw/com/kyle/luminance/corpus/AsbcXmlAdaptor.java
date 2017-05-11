@@ -94,33 +94,12 @@ public class AsbcXmlAdaptor implements LumIndexInterface {
     @Override
     public void Index(LumIndexer indexer, String inpath) throws IOException {
         List<AsbcDocument> doc_list = Parse(inpath);
-        for (AsbcDocument doc : doc_list) {
-            org.apache.lucene.document.Document base_doc = indexer.CreateIndexDocument(LumIndexer.DOC_DISCOURSE);
+        for (AsbcDocument doc : doc_list) {                        
             AnnotationProvider annot = new AnnotationProvider(doc.text);
-            LumDocument lum_doc = annot.create_discourse_doc();
-            indexer.AddField(base_doc, "title", doc.title, FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
-            indexer.AddField(base_doc, "timestamp", lucene_date_format(doc.asbc_pdate), FieldTypeFactory.Get(FieldTypeFactory.FTEnum.RawStoredIndex));
-            indexer.AddField(base_doc, "timestamp", new BytesRef(lucene_date_format(doc.asbc_pdate)), FieldTypeFactory.Get(FieldTypeFactory.FTEnum.TimestampIndex));
-            indexer.AddField(base_doc, "content", lum_doc.GetContent(), FieldTypeFactory.Get(FieldTypeFactory.FTEnum.FullIndex));
-
-            BytesRef base_doc_ref = indexer.GetUUIDAsBytesRef(base_doc);
-            indexer.AddToIndex(base_doc);
-            indexer.flush();
-                        
-            if (annot.has_segmented()) {
-                LumDocument seg_doc = annot.create_annot_doc_seg(base_doc_ref);
-                org.apache.lucene.document.Document seg_adoc = indexer.CreateIndexDocument(LumIndexer.DOC_ANNOTATION);
-                setup_index_annot_document(indexer, seg_adoc, "seg", seg_doc.GetContent(), base_doc_ref);
-                indexer.AddToIndex(seg_adoc);
-            }
-
-            if (annot.has_pos_tagged()) {
-                LumDocument pos_doc = annot.create_annot_doc_pos(base_doc_ref);
-                org.apache.lucene.document.Document pos_adoc = indexer.CreateIndexDocument(LumIndexer.DOC_ANNOTATION);
-                setup_index_annot_document(indexer, pos_adoc, "pos", pos_doc.GetContent(), base_doc_ref);
-                indexer.AddToIndex(pos_adoc);
-            }
-        }
+            annot.AddSupplementData("title", doc.title);
+            annot.Index(indexer);            
+        }        
+        indexer.flush();
     }
 
     private void setup_index_annot_document(LumIndexer indexer,

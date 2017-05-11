@@ -11,8 +11,13 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.UUID;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
@@ -97,30 +102,37 @@ public class LumIndexer {
     }
     
     public long index_doc(LumDocument lum_doc) throws IOException {
-        Document idx_doc = new Document();        
-        FieldType stored_ft = new FieldType();
-        long timestamp = System.nanoTime();
-        ByteBuffer buf = ByteBuffer.allocate(8);
-        buf.putLong(timestamp);
-        idx_doc.add(new Field("uuid", buf.array(), FieldTypeFactory.Get(FTEnum.RawStoredIndex)));
-        idx_doc.add(new Field("class", lum_doc.GetDocClass(), FieldTypeFactory.Get(FTEnum.SimpleIndex)));
-        idx_doc.add(new Field("type", lum_doc.GetDocType(), FieldTypeFactory.Get(FTEnum.RawIndex)));
+        Document idx_doc = new Document();     
+        BytesRef uuid_bytes = LumUtils.LongToBytesRef(lum_doc.GetUuid());
+        idx_doc.add(new Field("uuid", uuid_bytes, FieldTypeFactory.Get(FTEnum.RawStoredIndex)));
+        idx_doc.add(new Field("class", lum_doc.GetDocClass(), FieldTypeFactory.Get(FTEnum.RawStoredIndex)));                
+        idx_doc.add(new Field("mode", lum_doc.GetDocMode(), FieldTypeFactory.Get(FTEnum.RawStoredIndex)));                
+        idx_doc.add(new Field("timestamp", new BytesRef(lucene_date_format(lum_doc.GetTimestamp())), FieldTypeFactory.Get(FTEnum.TimestampIndex)));
         idx_doc.add(new Field("timestamp", lum_doc.GetTimestamp(), FieldTypeFactory.Get(FTEnum.RawIndex)));
-        if (lum_doc.GetBaseRef().length() > 0){
-            idx_doc.add(new Field("baseref", lum_doc.GetBaseRef(), FieldTypeFactory.Get(FTEnum.RawStoredIndex)));
+        if (lum_doc.GetBaseRef() > 0){
+            BytesRef base_ref_bytes = LumUtils.LongToBytesRef(lum_doc.GetBaseRef());
+            idx_doc.add(new Field("base_ref", base_ref_bytes, FieldTypeFactory.Get(FTEnum.RawStoredIndex)));
         }
         
-        if(lum_doc.GetDocType().equals(LumDocument.ANNO)){
+        if(lum_doc.GetDocClass().equals(LumDocument.ANNO)){
             idx_doc.add(new Field("anno", lum_doc.GetContent(), FieldTypeFactory.Get(FTEnum.FullIndex)));
+            idx_doc.add(new Field("anno_name", lum_doc.GetAnnoName(), FieldTypeFactory.Get(FTEnum.RawStoredIndex)));
+            idx_doc.add(new Field("anno_type", lum_doc.GetAnnoType(), FieldTypeFactory.Get(FTEnum.RawStoredIndex)));
         } else {
             idx_doc.add(new Field("content", lum_doc.GetContent(), FieldTypeFactory.Get(FTEnum.FullIndex)));
         }
         
+        for(String supp_key: lum_doc.GetSuppDataKey()){
+            idx_doc.add(new Field(supp_key, 
+                    lum_doc.GetSuppData(supp_key), 
+                    FieldTypeFactory.Get(FTEnum.RawStoredIndex)));
+        }
+        
         idx_writer.addDocument(idx_doc);
-        return timestamp;
+        return lum_doc.GetUuid();
     }
     
-    public Document CreateIndexDocument(String doc_type) {
+    public Document CreateIndexDocument_deprecate(String doc_type) {
         Document idx_doc = new Document();
         long timestamp = System.nanoTime();
         ByteBuffer buf = ByteBuffer.allocate(8);
@@ -155,7 +167,23 @@ public class LumIndexer {
     public void close() throws IOException {
         idx_writer.close();
     }
-
+    
+    private String lucene_date_format(String timestamp) {                    
+        String lum_date_str = null;
+        try {
+            DateFormat format = new SimpleDateFormat("yyyyMMdd");
+            lum_date_str = DateTools.dateToString(
+                                    format.parse(timestamp),
+                                    DateTools.Resolution.DAY);            
+        } catch (ParseException ex) { 
+            Calendar cal = Calendar.getInstance();
+            cal.set(2010, 1, 1, 0, 0, 0);
+            lum_date_str = DateTools.dateToString(
+                                    cal.getTime(), DateTools.Resolution.DAY);            
+        }
+        
+        return lum_date_str;                
+    }
             
             
 }

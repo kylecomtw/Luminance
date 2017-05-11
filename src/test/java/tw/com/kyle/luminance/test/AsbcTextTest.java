@@ -32,7 +32,7 @@ public class AsbcTextTest {
     @Test
     public void testAsbcIndex() throws IOException {
         String asbc_path = "etc/test/asbc.xml";
-        String INDEX_DIR = "h:/index_test";
+        String INDEX_DIR = "h:/index_dir";
         LumIndexer.CleanIndex(INDEX_DIR);
         LumIndexer indexer = new LumIndexer(INDEX_DIR);
         AsbcXmlAdaptor adaptor = new AsbcXmlAdaptor();                
