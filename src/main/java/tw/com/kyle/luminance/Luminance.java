@@ -55,8 +55,10 @@ public class Luminance {
     public JsonObject get_annotation_template(long uuid) throws IOException {
         LumReader reader = new LumReader(index_dir);        
         StringBuilder sb = new StringBuilder();
-        sb.append("# uuid: ");
+        sb.append("# base_ref: ");
         sb.append(uuid); sb.append("\n");        
+        sb.append("# anno_type: seg\n");
+        sb.append("# anno_name: user_defined\n");
         sb.append(reader.GetPlainText(uuid));
         
         JsonObject jobj = new JsonObject();
@@ -89,21 +91,21 @@ public class Luminance {
 
     public JsonArray findWord(String text) throws IOException {
         try (LumReader reader = new LumReader(index_dir);) {
-            Concordance concord = new Concordance(reader);
+            Concordance concord = new Concordance(reader, 10);
             return new KwicResult.KwicJsonList(concord.findWord(text)).toJson();
         }
     }
 
     public JsonArray findGrams(String text) throws IOException {
         try (LumReader reader = new LumReader(index_dir);) {
-            Concordance concord = new Concordance(reader);
+            Concordance concord = new Concordance(reader, 10);
             return new KwicResult.KwicJsonList(concord.findGrams(text)).toJson();
         }
     }
 
     public JsonArray findPos(String tag) throws IOException {
         try (LumReader reader = new LumReader(index_dir);) {
-            Concordance concord = new Concordance(reader);
+            Concordance concord = new Concordance(reader, 10);
             return new KwicResult.KwicJsonList(concord.findPos(tag)).toJson();
         }
     }

@@ -48,7 +48,7 @@ public class SketcherTest {
     public void testConcordance_Word() throws IOException {
         setup();
         try (LumReader reader = new LumReader(INDEX_DIR);) {
-            Concordance concord = new Concordance(reader);
+            Concordance concord = new Concordance(reader, 10);
             List<KwicResult> kwic_list = concord.findWord("詞");            
             for(KwicResult kr: kwic_list){
                 String input = kr.toStringRepr(false);

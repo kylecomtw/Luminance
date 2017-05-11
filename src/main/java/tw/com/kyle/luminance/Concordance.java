@@ -24,10 +24,12 @@ import java.util.stream.Collectors;
 
 public class Concordance {
 
-    LumReader reader = null;
-
-    public Concordance(LumReader r) {
+    private LumReader reader = null;
+    private int win_size = 10;
+    
+    public Concordance(LumReader r, int w) {
         reader = r;
+        win_size = w;
     }
 
     public List<KwicResult> findWord(String probe) throws IOException {       
@@ -63,7 +65,7 @@ public class Concordance {
             Document doc = reader.GetDocumentByDocId(docid_x);
             LumWindow lumWin = new LumWindow(doc, reader);
             List<KwicResult> kwics = doc_map.get(docid_x).stream()
-                    .map((x) -> lumWin.Reconstruct(10, x[1], x[2]))
+                    .map((x) -> lumWin.Reconstruct(win_size, x[1], x[2]))
                     .collect(Collectors.toList());
             kwic_list.addAll(kwics);
         }

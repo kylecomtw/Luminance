@@ -11,7 +11,7 @@
             <goal>surefire:test</goal>
         </goals>
         <properties>
-            <test>tw.com.kyle.luminance.test.ConcordanceTest#testConcordance_Grams</test>
+            <test>tw.com.kyle.luminance.test.TextSteppedAnnoTest</test>
             <forkMode>once</forkMode>
             <maven.surefire.debug>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address}</maven.surefire.debug>
             <jpda.listen>true</jpda.listen>                
@@ -27,7 +27,7 @@
             <goal>surefire:test</goal>
         </goals>
         <properties>
-            <test>tw.com.kyle.luminance.test.ConcordanceTest#testConcordance_Grams</test>
+            <test>tw.com.kyle.luminance.test.TextSteppedAnnoTest</test>
         </properties>
     </action>
 </actions>

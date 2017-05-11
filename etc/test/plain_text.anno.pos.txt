@@ -1,0 +1,7 @@
+# base_ref: {REF}
+# anno_type: pos
+# anno_name: ckip-pos
+面對(VC)　人工(Na)　智慧(Na)　（(PARENTHESISCATEGORY)　AI(FW)　）(PARENTHESISCATEGORY)　的(T)　日益(D)　精進(VH)　，(COMMACATEGORY)
+許多(Neqa)　父母(Na)　擔憂(VK)　該(D)　讓(VL)　孩子(Na)　學(VC)　什麼(Nep)　，(COMMACATEGORY)
+才(Da)　不會(D)　被(P)　機器人(Na)　搶(VD)　了(Di)　工作(Na)　。(PERIODCATEGORY)
+

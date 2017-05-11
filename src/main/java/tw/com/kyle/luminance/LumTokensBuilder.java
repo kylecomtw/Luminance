@@ -123,6 +123,8 @@ public class LumTokensBuilder {
     }
 
     private boolean align_with_token_list(List<LumToken> tok_list, List<LumRange> range, LTField field) {
+        if (tok_list.size() < range.size()) return false;
+        
         boolean is_match_success = true;        
         int tok_i = 0;
         for (int rng_i = 0; rng_i < range.size(); ++rng_i) {

@@ -39,15 +39,19 @@ public class TextUtils {
     }
     
     public static String extract_raw_text(String annots){
-        String[] tokens = annots.split("[\u3000\n]");
-        Pattern pat = Pattern.compile("(.*?)\\((.*?)\\)");
-        String parsed = Arrays.asList(tokens).stream()
-                .map((String x)->{
-                    Matcher m = pat.matcher(x);
-                    if(!m.find()) return "";
-                    else return m.group(1);
-                }).collect(Collectors.joining());
-        return parsed;
+        if (is_segmented(annots) || is_pos_tagged(annots)){
+            String[] tokens = annots.split("[\u3000\n]");
+            Pattern pat = Pattern.compile("(.*?)\\((.*?)\\)");
+            String parsed = Arrays.asList(tokens).stream()
+                    .map((String x)->{
+                        Matcher m = pat.matcher(x);
+                        if(!m.find()) return x;
+                        else return m.group(1);
+                    }).collect(Collectors.joining());
+            return parsed;
+        } else {
+            return annots;
+        }
     }
     
     private static List<String[]> parse_annot_text(String intxt) {
@@ -56,15 +60,14 @@ public class TextUtils {
         List<String[]> parsed = Arrays.asList(tokens).stream()
                 .map((String x)->{
                     Matcher m = pat.matcher(x);
-                    if(!m.find()) return new String[]{};
+                    if(!m.find()) return new String[]{x};
                     else return new String[]{m.group(1), m.group(2)};
                 }).collect(Collectors.toList());
         return parsed;
     }
     
     public static List<String[]> extract_seg_annot(String intxt) {
-        List<String[]> annot_list = parse_annot_text(intxt).stream()
-                .filter((x)->x.length == 2)
+        List<String[]> annot_list = parse_annot_text(intxt).stream()                
                 .map((x)->new String[]{x[0], x[0]})
                 .collect(Collectors.toList());                
         

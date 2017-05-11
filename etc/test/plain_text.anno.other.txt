@@ -1,0 +1,7 @@
+# base_ref: {REF}
+# anno_type: tag
+# anno_name: sentiment-manual
+面對　人工智慧　（　AI　）　的　日益精進(POS)　，
+許多　父母擔憂(NEG)　　該　讓　孩子　學　什麼　，
+才　不　會　被　機器人　搶了工作(NEG)　。
+

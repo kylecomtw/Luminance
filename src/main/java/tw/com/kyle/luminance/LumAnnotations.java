@@ -56,10 +56,12 @@ public class LumAnnotations {
     public LumAnnotations(long ref_uuid) { base_ref = ref_uuid; }
     public void AddAnnotation(long annot_uuid, Document annot_doc){
         AnnotRecord a_rec = new AnnotRecord();
+        String anno_name = annot_doc.get("anno_name");
         a_rec.annot_uuid = annot_uuid;
         a_rec.annot_type = annot_doc.get("anno_type");
-        a_rec.annot_range = annot_doc.get("anno_range");
-        a_rec.annot_mode = annot_doc.get("anno_mode");
+        
+        // a_rec.annot_range = annot_doc.get("anno_range");
+        // a_rec.annot_mode = annot_doc.get("anno_mode");
         a_rec.annot_doc = annot_doc;
         annot_list.add(a_rec);
     }

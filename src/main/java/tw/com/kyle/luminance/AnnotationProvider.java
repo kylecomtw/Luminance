@@ -6,17 +6,9 @@
 package tw.com.kyle.luminance;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.util.BytesRef;
 
 /**
  *
@@ -32,17 +24,25 @@ public class AnnotationProvider {
     
     public AnnotationProvider(String inputs) {
         try {
-            pos_map = LumPositionMap.Get(TextUtils.extract_raw_text(inputs));
-            if (inputs.substring(0, 100).replace(" ", "").contains("#baseref:")) {
+            
+            if (inputs.substring(0, Math.min(100, inputs.length()))
+                      .replace(" ", "").contains("#base_ref:")) {
                 //! this is a anno doc format
                 LumDocument lum_doc = LumDocumentAdapter.FromText(inputs);
-                List<String[]> annot_data = TextUtils.extract_pos_annot(inputs);
-                String anno_content = transform_to_annot_format(annot_data);                
+                pos_map = LumPositionMap.Get(TextUtils.extract_raw_text(lum_doc.GetContent()));
+                List<String[]> anno_data = null;
+                if (lum_doc.GetAnnoType().equals(LumDocument.ANNO_SEG)){
+                    anno_data = TextUtils.extract_seg_annot(lum_doc.GetContent()); 
+                } else {
+                    anno_data = TextUtils.extract_pos_annot(lum_doc.GetContent());                    
+                }
+                String anno_content = transform_to_annot_format(anno_data);
                 lum_doc.SetContent(anno_content);
                 doc_list.add(lum_doc);
                 
             } else {
                 //! it is a plain text, extract all informations we can
+                pos_map = LumPositionMap.Get(TextUtils.extract_raw_text(inputs));
                 build_anno_doc_list(inputs);
             }
         } catch (IOException ex) {

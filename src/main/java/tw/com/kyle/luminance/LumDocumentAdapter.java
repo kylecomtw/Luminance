@@ -24,11 +24,12 @@ public class LumDocumentAdapter {
         for (String line : lines) {
             if (line.startsWith("#")) {
                 String[] toks = line.split(":");
-                if (toks.length <= 2) {
+                toks[0] = toks[0].replace("#", "").trim();
+                if (toks.length < 2) {
                     continue;
                 }
 
-                switch (toks[0].trim().toLowerCase()) {
+                switch (toks[0].toLowerCase()) {
                     case "anno_name":
                         doc.SetAnnoName(toks[1].trim());
                         break;
@@ -37,6 +38,7 @@ public class LumDocumentAdapter {
                         break;
                     case "base_ref":
                         doc.SetBaseRef(Long.valueOf(toks[1].trim()));
+                        doc.SetDocClass(LumDocument.ANNO);
                         break;
                     default:
                         break;

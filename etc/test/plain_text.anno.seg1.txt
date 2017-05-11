@@ -1,0 +1,7 @@
+# base_ref: {REF}
+# anno_type: seg
+# anno_name: ckip-seg
+面對　人工　智慧　（　AI　）　的　日益　精進　，
+許多　父母　擔憂　該　讓　孩子　學　什麼　，
+才　不會　被　機器人　搶　了　工作　。
+

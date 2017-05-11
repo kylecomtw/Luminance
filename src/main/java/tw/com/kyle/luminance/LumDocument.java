@@ -20,8 +20,12 @@ public class LumDocument {
     public static final String ANNO = "anno";
     public static final String FRAG = "frag";    
     public static final String GENERIC = "generic";
+    public static final String ANNO_SEG = "seg";
+    public static final String ANNO_POS = "pos";
+    public static final String ANNO_TAG = "tag";
     
-    private final List<String> ANNO_TYPES = Arrays.asList(new String[] {"seg", "pos", "tag"});        
+    private final List<String> ANNO_TYPES = Arrays.asList(
+            new String[] {ANNO_SEG, ANNO_POS, ANNO_TAG});        
     private String doc_class = GENERIC;
     private String doc_mode = GENERIC;
     private String timestamp = DateUtils.now();    
@@ -33,7 +37,7 @@ public class LumDocument {
     private Map<String, String> supp_data = new HashMap<>();
     
     public LumDocument() {
-        uuid = System.nanoTime();
+        uuid = System.currentTimeMillis();
     }
     
     //! Getters and Setters

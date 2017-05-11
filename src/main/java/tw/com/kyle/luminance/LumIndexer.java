@@ -115,7 +115,7 @@ public class LumIndexer {
         }
         
         if(lum_doc.GetDocClass().equals(LumDocument.ANNO)){
-            idx_doc.add(new Field("anno", lum_doc.GetContent(), FieldTypeFactory.Get(FTEnum.FullIndex)));
+            idx_doc.add(new Field("anno", lum_doc.GetContent(), FieldTypeFactory.Get(FTEnum.NonStoredFullIndex)));
             idx_doc.add(new Field("anno_name", lum_doc.GetAnnoName(), FieldTypeFactory.Get(FTEnum.RawStoredIndex)));
             idx_doc.add(new Field("anno_type", lum_doc.GetAnnoType(), FieldTypeFactory.Get(FTEnum.RawStoredIndex)));
         } else {

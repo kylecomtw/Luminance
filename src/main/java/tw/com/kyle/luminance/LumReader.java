@@ -15,6 +15,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.SimpleCollector;
@@ -101,9 +102,14 @@ public class LumReader implements AutoCloseable {
         BytesRef bref = LumUtils.LongToBytesRef(ref_uuid);
         TermQuery tquery = new TermQuery(new Term("base_ref", bref));
         searcher.search(tquery, new SimpleCollector() {
+            int docBase = 0;
             @Override
-            public void collect(int i) throws IOException {
-                BytesRef uuid_x = reader.document(i).getBinaryValue("uuid");
+            protected void doSetNextReader(LeafReaderContext context){
+                docBase = context.docBase;
+            }
+            @Override
+            public void collect(int i) throws IOException {                
+                BytesRef uuid_x = searcher.doc(i + docBase).getBinaryValue("uuid");
                 uuid_list.add(LumUtils.BytesRefToLong(uuid_x));
                 // System.out.printf("%016x%n", uuid_list.get(uuid_list.size() - 1));
             }
