@@ -5,6 +5,7 @@
  */
 package tw.com.kyle.luminance.test;
 
+import java.util.Date;
 import static junit.framework.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +33,11 @@ public class DummyTest {
         @Test
         public void secondTest() {
             assertTrue(hasSetup);
+        }
+        
+        @Test
+        public void DateTest(){
+            System.out.println(new Date(Long.MAX_VALUE / 1000));
         }
 
 }

@@ -69,7 +69,7 @@ public class LumTokensBuilder {
     private boolean combine_with_sequence(List<LumToken> tok_list, List<LumRange> range, LTField field) {
 
         //! if tok_list is empty, transform range data to create a new token list
-        boolean ret = false;
+        boolean ret = false;              
         if (tok_list.isEmpty()) {
             if (range.isEmpty()) 
                 ret = expand_reference_to_token_list(tok_list);
@@ -78,7 +78,6 @@ public class LumTokensBuilder {
         } else {
             ret = align_with_token_list(tok_list, range, field);
         }
-
         return ret;
     }
 

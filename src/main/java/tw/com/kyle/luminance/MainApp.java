@@ -13,11 +13,10 @@ import java.nio.file.Paths;
 import java.util.Map;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import tw.com.kyle.luminance.corpus.AsbcXmlAdaptor;
 import tw.com.kyle.luminance.corpus.LumIndexInterface;
-import tw.com.kyle.luminance.corpus.PttJsonAdaptor;
 import tw.com.kyle.luminance.corpus.compute.CollocateFromIndex;
 import tw.com.kyle.luminance.corpus.compute.CorpusStat;
 import tw.com.kyle.luminance.corpus.compute.ExpNetwork;
@@ -27,18 +26,19 @@ import tw.com.kyle.luminance.corpus.compute.ExpNetwork;
  * @author Sean_S325
  */
 public class MainApp {
-    final static String CORPUS_PATH = "E:\\Kyle\\Corpus\\PTT\\data\\FuMouDiscuss";  
-    final static String INDEX_DIR = "h:/lum_index_fumou";
+     
+    final static String INDEX_DIR = "data\\index_ASBC";
+    // final static String INDEX_DIR = "data\\index_WomenTalk";
     // final String CORPUS_PATH = "E:\\Kyle\\Corpus\\ASBC\\ASBC_A";        
     // final String CORPUS_PATH = "E:\\Study\\16_Idioms\\20_Materials\\Apple_text";        
     public static void main(String[] args) {
         try{            
             Map<String, String> props = PropLoader.Load();                        
             if (args.length == 0) {                
-                // import_corpus(props);
+                import_corpus(props);
                 // summarize_stat(props);
                 // analyze(props);                   
-                build_networks(props);                
+                // build_networks(props);                
                 // index(props);
                 // query(props);                
                 // clear(props);
@@ -82,9 +82,10 @@ public class MainApp {
     
     private static void import_corpus(Map<String, String> props) 
             throws IOException {        
-        LumIndexInterface adaptor = new PttJsonAdaptor();
-        // final String CORPUS_PATH = "E:\\Kyle\\Corpus\\ASBC\\ASBC_A";
-        // AsbcXmlAdaptor adaptor = new AsbcXmlAdaptor();
+        // String CORPUS_PATH = "data\\WomenTalk"; 
+        // LumIndexInterface adaptor = new PttJsonAdaptor();
+        String CORPUS_PATH = "data\\ASBC"; 
+        LumIndexInterface adaptor = new AsbcXmlAdaptor();
         // final String CORPUS_PATH = "E:\\Study\\16_Idioms\\20_Materials\\Apple_text";
         // AppleLineDelimAdaptor adaptor = new AppleLineDelimAdaptor();
         if (!Files.exists(Paths.get(CORPUS_PATH))) return;

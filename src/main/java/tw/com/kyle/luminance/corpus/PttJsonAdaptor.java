@@ -7,6 +7,7 @@ package tw.com.kyle.luminance.corpus;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
@@ -23,11 +24,8 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.DateTools.Resolution;
-import org.apache.lucene.document.Document;
 import tw.com.kyle.luminance.AnnotationProvider;
-import tw.com.kyle.luminance.FieldTypeFactory;
 import tw.com.kyle.luminance.LumIndexer;
-import tw.com.kyle.luminance.FieldTypeFactory.FTEnum;
 import tw.com.kyle.luminance.LumDocument;
 
 /**
@@ -70,7 +68,12 @@ public class PttJsonAdaptor implements LumIndexInterface {
             art.author = art_x.get("author").getAsString();
             art.url = art_x.get("URL").getAsString();
             art.postTime = art_x.get("post_time").getAsString().substring(0, 8);
-            art.comments = get_comments_from_json(art_x.getAsJsonObject("comments"));                        
+            if (!(art_x.get("comments") instanceof JsonNull)){
+                art.comments = get_comments_from_json(art_x.getAsJsonObject("comments"));                        
+            } else {
+                art.comments = new ArrayList<>();
+            }
+        
             art_list.add(art);
         }
         
@@ -91,7 +94,7 @@ public class PttJsonAdaptor implements LumIndexInterface {
             @Override
             public List<PttComment> apply(JsonArray jarr) {
                 List<PttComment> com_list = new ArrayList<>();
-                for(JsonElement com: push_arr){
+                for(JsonElement com: jarr){
                     JsonArray com_arr_x = com.getAsJsonArray();
                     PttComment com_obj = new PttComment();
                     com_obj.valence = valence;
@@ -113,6 +116,7 @@ public class PttJsonAdaptor implements LumIndexInterface {
     @Override
     public void Index(LumIndexer indexer, String inpath) throws IOException{        
         List<PttArticle> art_list = Parse(inpath);
+        boolean IS_PLAIN_TEXT = true;
         
         if(art_list == null || art_list.isEmpty()) {
             logger.warning("Failed to load for index " + inpath);
@@ -120,7 +124,7 @@ public class PttJsonAdaptor implements LumIndexInterface {
         }
         
         for(PttArticle art: art_list){
-            AnnotationProvider annot_prov = new AnnotationProvider(art.content);
+            AnnotationProvider annot_prov = new AnnotationProvider(art.content, IS_PLAIN_TEXT);
             annot_prov.AddSupplementData("author", art.author);
             annot_prov.AddSupplementData("title", art.title);
             annot_prov.SetBaseTimestamp(art.postTime);            
@@ -129,17 +133,17 @@ public class PttJsonAdaptor implements LumIndexInterface {
             for(PttComment com: art.comments){
                 LumDocument frag = new LumDocument();
                 frag.SetBaseRef(annot_prov.GetRefUuid());
-                frag.SetDocMode(LumDocument.FRAG);                
+                frag.SetDocMode(LumDocument.FRAG); 
+                frag.SetDocClass(LumDocument.DISCOURSE);
                 frag.SetTimestamp(art.postTime);
                 frag.AddSuppData("author", com.author);
                 frag.AddSuppData("valence", String.valueOf(com.valence));                
+                frag.SetContent(com.comment);
                 annot_prov.AddLumDocument(frag);
             }                                                        
             annot_prov.Index(indexer);
         }
-        
-        
-                
+                                       
     }
     
     private String lucene_date_format(String timestamp) {                    

@@ -18,10 +18,10 @@ import org.apache.lucene.document.Document;
  */
 public class LumAnnotations {
     private class AnnotRecord {  
-        public long annot_uuid;
-        public String annot_type;
-        public String annot_range;
-        public String annot_mode;        
+        public long annot_uuid = -1;
+        public String annot_type = "";
+        public String annot_range = "";
+        public String annot_mode = "";        
         public Document annot_doc;
     }
     private List<AnnotRecord> annot_list = new ArrayList<>();
@@ -57,8 +57,12 @@ public class LumAnnotations {
     public void AddAnnotation(long annot_uuid, Document annot_doc){
         AnnotRecord a_rec = new AnnotRecord();
         String anno_name = annot_doc.get("anno_name");
+        String anno_type = annot_doc.get("anno_type");
+        if (anno_type != null) {
+            a_rec.annot_type = anno_type;
+        }
         a_rec.annot_uuid = annot_uuid;
-        a_rec.annot_type = annot_doc.get("anno_type");
+        
         
         // a_rec.annot_range = annot_doc.get("anno_range");
         // a_rec.annot_mode = annot_doc.get("anno_mode");

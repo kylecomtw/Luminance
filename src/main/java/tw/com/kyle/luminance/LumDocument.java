@@ -37,7 +37,7 @@ public class LumDocument {
     private Map<String, String> supp_data = new HashMap<>();
     
     public LumDocument() {
-        uuid = System.currentTimeMillis();
+        uuid = System.currentTimeMillis() * 1000 + (System.nanoTime() % 1000);
     }
     
     //! Getters and Setters

@@ -98,8 +98,7 @@ public class AsbcXmlAdaptor implements LumIndexInterface {
             AnnotationProvider annot = new AnnotationProvider(doc.text);
             annot.AddSupplementData("title", doc.title);
             annot.Index(indexer);            
-        }        
-        indexer.flush();
+        }                        
     }
 
     private void setup_index_annot_document(LumIndexer indexer,
