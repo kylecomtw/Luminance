@@ -22,7 +22,7 @@ public class LumDocument {
     public static final String GENERIC = "generic";
     public static final String ANNO_SEG = "seg";
     public static final String ANNO_POS = "pos";
-    public static final String ANNO_SEGPOS = "seg/pos";
+    public static final String ANNO_SEGPOS = "segpos";
     public static final String ANNO_TAG = "tag";
     
     private final List<String> ANNO_TYPES = Arrays.asList(

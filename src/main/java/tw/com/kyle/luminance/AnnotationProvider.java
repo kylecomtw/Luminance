@@ -96,7 +96,7 @@ public class AnnotationProvider {
             
             LumDocument lum_doc_pos = LumDocumentAdapter.FromText(inputs);
             lum_doc_pos.SetContent(anno_pos_content);
-            lum_doc_pos.SetAnnoType(LumDocument.ANNO_SEG);
+            lum_doc_pos.SetAnnoType(LumDocument.ANNO_POS);
             doc_list.add(lum_doc);
             doc_list.add(lum_doc_pos);
         } else if (lum_doc.GetAnnoType().equals(LumDocument.ANNO_SEG)) {
