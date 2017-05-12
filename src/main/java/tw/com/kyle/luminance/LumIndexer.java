@@ -85,7 +85,9 @@ public class LumIndexer {
     }
     
     public void flush() throws IOException {
-        idx_writer.flush();
+        if (idx_writer.isOpen()){
+            idx_writer.flush();
+        }
     }
     
     public void open() throws IOException {
@@ -165,7 +167,9 @@ public class LumIndexer {
     }
     
     public void close() throws IOException {
-        idx_writer.close();
+        if (idx_writer.isOpen()){
+            idx_writer.close();
+        }
     }
     
     private String lucene_date_format(String timestamp) {                    

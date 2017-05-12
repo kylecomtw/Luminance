@@ -36,7 +36,7 @@ public class LumQueryTest {
             Luminance lum = new Luminance(INDEX_DIR);
             String txt = String.join("\n",
                     Files.readAllLines(Paths.get("etc/test/simple_text.txt"), StandardCharsets.UTF_8));
-            JsonObject elem = (JsonObject) lum.add_document(txt);
+            JsonObject elem = (JsonObject) lum.add_single_document(txt);
             lum.close();
         } catch (IOException ex) {
             System.out.println(ex);

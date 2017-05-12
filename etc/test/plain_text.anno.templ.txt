@@ -1,4 +1,4 @@
-# base_ref: 1494516511228
+# base_ref: 1494576763196498
 # anno_type: seg
 # anno_name: user_defined
 面對人工智慧（AI）的日益精進，許多父母擔憂該讓孩子學什麼，才不會被機器人搶了工作。

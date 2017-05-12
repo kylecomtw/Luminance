@@ -17,6 +17,8 @@ import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.SimpleCollector;
 import org.apache.lucene.search.TermQuery;
@@ -101,7 +103,12 @@ public class LumReader implements AutoCloseable {
         List<Long> uuid_list = new ArrayList<>();
         BytesRef bref = LumUtils.LongToBytesRef(ref_uuid);
         TermQuery tquery = new TermQuery(new Term("base_ref", bref));
-        searcher.search(tquery, new SimpleCollector() {
+        TermQuery aquery = new TermQuery(new Term("class", LumDocument.ANNO));
+        BooleanQuery.Builder bquery_builder = new BooleanQuery.Builder();
+        bquery_builder.add(tquery, Occur.SHOULD);
+        bquery_builder.add(aquery, Occur.SHOULD);
+        
+        searcher.search(bquery_builder.build(), new SimpleCollector() {
             int docBase = 0;
             @Override
             protected void doSetNextReader(LeafReaderContext context){

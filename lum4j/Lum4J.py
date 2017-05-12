@@ -37,8 +37,8 @@ class Lum4J:
 
     def format_kwic(self, kwic):
         buf = "/".join([self.format_token(x) for x in kwic["prec"]])
-        buf += "<" + 
-               "/".join([self.format_token(x) for x in kwic["target"]])
+        buf += "<" \
+               + "/".join([self.format_token(x) for x in kwic["target"]]) \
                + ">"
         buf += "/".join([self.format_token(x) for x in kwic["succ"]])
         return buf

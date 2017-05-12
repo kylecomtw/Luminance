@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Logger;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.util.BytesRef;
 import tw.com.kyle.sketcher.Sketcher;
 
@@ -31,11 +32,11 @@ public class Luminance {
     private final int CONCORD_WIN_SIZE = 20;
 
     public Luminance(String idir) throws IOException {
-        index_dir = idir;        
+        index_dir = idir;
     }
 
     public void close() throws IOException {
-        indexer.flush();
+        indexer.flush();       
         indexer.close();
     }
 
@@ -49,17 +50,34 @@ public class Luminance {
         return ret;
     }
 
+    public void begin_write() throws IOException {
+        if (indexer == null) {
+            indexer = new LumIndexer(index_dir);
+        }
+
+        indexer.open();
+    }
+    
+    public void end_write() throws IOException {
+        close();
+    }
+
     public JsonElement add_document(String text) throws IOException {
-        indexer = new LumIndexer(index_dir);
+
         JsonObject ret = new JsonObject();
         AnnotationProvider annot_prov = new AnnotationProvider(text);
-        indexer.open();
         for (LumDocument lum_doc : annot_prov.IndexableDocuments()) {
             indexer.index_doc(lum_doc);
         }
 
         ret.addProperty("uuid", annot_prov.GetRefUuid());
-        indexer.close();
+        return ret;
+    }
+
+    public JsonElement add_single_document(String text) throws IOException {
+        begin_write();
+        JsonElement ret = add_document(text);        
+        end_write();
         return ret;
     }
 
@@ -94,8 +112,15 @@ public class Luminance {
     public JsonArray get_annotations(long uuid) throws IOException {
         JsonArray jarr = new JsonArray();
         try (LumReader reader = new LumReader(index_dir);) {
-            List<Long> uuids = reader.getAnnotations(uuid);
-            uuids.stream().forEach((x) -> jarr.add(x));
+            List<Long> uuids = reader.getAnnotations(uuid);            
+            for(long uuid_x: uuids){
+                JsonObject jobj = new JsonObject();
+                Document adoc = reader.GetDocument(uuid_x);
+                jobj.addProperty("uuid", uuid_x);
+                jobj.addProperty("anno_type", adoc.get("anno_type"));
+                jobj.addProperty("anno_name", adoc.get("anno_name"));               
+                jarr.add(jobj);
+            }                    
         }
 
         return jarr;
@@ -123,11 +148,11 @@ public class Luminance {
     }
 
     public JsonArray match_text(String inputs, String rules) {
-        JsonArray jarr = new JsonArray();        
+        JsonArray jarr = new JsonArray();
         Sketcher sketcher = new Sketcher();
         JsonElement jelem = sketcher.match_json(inputs, rules);
         jarr.add(jelem);
-        
+
         return jarr;
     }
 

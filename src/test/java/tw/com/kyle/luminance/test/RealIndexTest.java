@@ -17,10 +17,10 @@ import tw.com.kyle.luminance.Luminance;
  * @author Sean
  */
 public class RealIndexTest {
-    @Test @Ignore
+    @Test
     public void testConcordance() throws IOException {
         Luminance lum = new Luminance("data/index_ASBC");
-        JsonArray kwic_list = lum.findWord("政府");
+        JsonArray kwic_list = lum.findWord("指出");
         assertTrue(kwic_list.size() > 0);
     }
     

@@ -82,18 +82,35 @@ public class AnnotationProvider {
         }
     }
 
-    private void build_doc_from_adaptor(String inputs) throws IOException {
+    private void build_doc_from_adaptor(String inputs) throws IOException {                
         LumDocument lum_doc = LumDocumentAdapter.FromText(inputs);
         pos_map = LumPositionMap.Get(TextUtils.extract_raw_text(lum_doc.GetContent()));
-        List<String[]> anno_data = null;
-        if (lum_doc.GetAnnoType().equals(LumDocument.ANNO_SEG)) {
-            anno_data = TextUtils.extract_seg_annot(lum_doc.GetContent());
+        
+        if (lum_doc.GetAnnoType().equals(LumDocument.ANNO_SEGPOS)) {
+            List<String[]> anno_seg_data = TextUtils.extract_seg_annot(lum_doc.GetContent());
+            List<String[]> anno_pos_data = TextUtils.extract_pos_annot(lum_doc.GetContent());            
+            String anno_seg_content = transform_to_annot_format(anno_seg_data);
+            String anno_pos_content = transform_to_annot_format(anno_pos_data);
+            lum_doc.SetContent(anno_seg_content);
+            lum_doc.SetAnnoType(LumDocument.ANNO_SEG);
+            
+            LumDocument lum_doc_pos = LumDocumentAdapter.FromText(inputs);
+            lum_doc_pos.SetContent(anno_pos_content);
+            lum_doc_pos.SetAnnoType(LumDocument.ANNO_SEG);
+            doc_list.add(lum_doc);
+            doc_list.add(lum_doc_pos);
+        } else if (lum_doc.GetAnnoType().equals(LumDocument.ANNO_SEG)) {
+            List<String[]> anno_data = TextUtils.extract_seg_annot(lum_doc.GetContent());
+            String anno_content = transform_to_annot_format(anno_data);
+            lum_doc.SetContent(anno_content);
+            doc_list.add(lum_doc);
         } else {
-            anno_data = TextUtils.extract_pos_annot(lum_doc.GetContent());
+            List<String[]> anno_data = TextUtils.extract_pos_annot(lum_doc.GetContent());
+            String anno_content = transform_to_annot_format(anno_data);
+            lum_doc.SetContent(anno_content);
+            doc_list.add(lum_doc);
         }
-        String anno_content = transform_to_annot_format(anno_data);
-        lum_doc.SetContent(anno_content);
-        doc_list.add(lum_doc);
+        
     }
 
     public LumDocument create_discourse_doc(String inputs) {

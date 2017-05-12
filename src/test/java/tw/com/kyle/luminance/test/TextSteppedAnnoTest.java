@@ -26,9 +26,8 @@ public class TextSteppedAnnoTest {
     public void test_plaintext() throws IOException {
         Luminance.clean_index(INDEX_DIR);
         Luminance lum = new Luminance(INDEX_DIR);
-        String txt = readAll("etc/test/plain_text.txt");
-        JsonObject elem = (JsonObject) lum.add_document(txt);        
-        lum.close();        
+        String txt = readAll("etc/test/plain_text.txt");        ;
+        JsonObject elem = (JsonObject) lum.add_single_document(txt);                
         
         long ref_uuid = elem.get("uuid").getAsLong();
         JsonObject anno_templ = lum.get_annotation_template(ref_uuid);
@@ -36,7 +35,8 @@ public class TextSteppedAnnoTest {
                 anno_templ.get("anno.templ").getAsString().getBytes(StandardCharsets.UTF_8));
         long sz_templ = Files.size(Paths.get("etc/test/plain_text.anno.templ.txt"));
         assertTrue(Files.size(Paths.get("etc/test/plain_text.anno.templ.txt")) > 20);
-                
+        
+        lum.begin_write();
         String anno_seg1 = readAll("etc/test/plain_text.anno.seg1.txt").replace("{REF}", String.valueOf(ref_uuid));
         lum.add_document(anno_seg1);
         
@@ -48,7 +48,7 @@ public class TextSteppedAnnoTest {
         
         String anno_other = readAll("etc/test/plain_text.anno.other.txt").replace("{REF}", String.valueOf(ref_uuid));
         lum.add_document(anno_other);
-        lum.close();
+        lum.end_write();
                 
         JsonArray annot_obj = lum.get_annotations(elem.get("uuid").getAsLong());
         assertTrue("Index reference text and annotations: PASS", annot_obj.size() == 4);
@@ -58,6 +58,7 @@ public class TextSteppedAnnoTest {
         List<KwicResult> kwics = concord.findWord("人工智慧");
         assertTrue(kwics.size() == 1);
         kwics.forEach((x)->System.out.println(x));
+                
     }
     
     private String readAll(String fpath) throws IOException{
