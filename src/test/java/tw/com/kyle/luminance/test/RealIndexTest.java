@@ -8,6 +8,7 @@ package tw.com.kyle.luminance.test;
 import com.google.gson.JsonArray;
 import java.io.IOException;
 import static junit.framework.Assert.assertTrue;
+import org.junit.Ignore;
 import org.junit.Test;
 import tw.com.kyle.luminance.Luminance;
 
@@ -16,7 +17,7 @@ import tw.com.kyle.luminance.Luminance;
  * @author Sean
  */
 public class RealIndexTest {
-    @Test
+    @Test @Ignore
     public void testConcordance() throws IOException {
         Luminance lum = new Luminance("data/index_ASBC");
         JsonArray kwic_list = lum.findWord("政府");

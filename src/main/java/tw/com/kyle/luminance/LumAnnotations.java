@@ -55,6 +55,9 @@ public class LumAnnotations {
     
     public LumAnnotations(long ref_uuid) { base_ref = ref_uuid; }
     public void AddAnnotation(long annot_uuid, Document annot_doc){
+        if (!annot_doc.get("class").equals(LumDocument.ANNO)) {
+            return;
+        }
         AnnotRecord a_rec = new AnnotRecord();
         String anno_name = annot_doc.get("anno_name");
         String anno_type = annot_doc.get("anno_type");

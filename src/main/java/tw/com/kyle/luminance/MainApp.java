@@ -6,6 +6,7 @@
 package tw.com.kyle.luminance;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +35,7 @@ public class MainApp {
     public static void main(String[] args) {
         try{            
             Map<String, String> props = PropLoader.Load();                        
+            URL uri = MainApp.class.getResource("/test.txt");
             if (args.length == 0) {                
                 import_corpus(props);
                 // summarize_stat(props);

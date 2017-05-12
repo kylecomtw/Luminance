@@ -5,6 +5,7 @@
  */
 package tw.com.kyle.luminance.test;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -57,5 +58,18 @@ public class SketcherTest {
                 System.out.println(results);
             }            
         }
+    }
+        
+    @Test
+    public void testSketch_Json() throws IOException {
+        setup();
+        Luminance lum = new Luminance(INDEX_DIR);
+        JsonArray ret = lum.sketch_text("詞", true);
+        assertTrue(ret.size() > 0);
+    }
+    
+    @Test
+    public void testResource() {
+        
     }
 }

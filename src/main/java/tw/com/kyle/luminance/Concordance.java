@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class Concordance {
 
     private LumReader reader = null;
-    private int win_size = 10;
+    private int win_size = 20;
 
     public Concordance(LumReader r, int w) {
         reader = r;
@@ -62,15 +62,16 @@ public class Concordance {
         List<Integer> doc_list = doc_map.keySet().stream().sorted().collect(Collectors.toList());
         for (int docid_x : doc_list) {
             try{
-            Document doc = reader.GetDocumentByDocId(docid_x);
-            LumWindow lumWin = new LumWindow(doc, reader);            
-            List<KwicResult> kwics = doc_map.get(docid_x).stream()
-                    .map((x) -> lumWin.Reconstruct(win_size, x[1], x[2]))
-                    .collect(Collectors.toList());
-            kwic_list.addAll(kwics);
+                Document doc = reader.GetDocumentByDocId(docid_x);
+                LumWindow lumWin = new LumWindow(doc, reader);            
+                List<KwicResult> kwics = doc_map.get(docid_x).stream()
+                        .map((x) -> lumWin.Reconstruct(win_size, x[1], x[2]))
+                        .collect(Collectors.toList());
+                kwic_list.addAll(kwics);
             } catch (NullPointerException | IndexOutOfBoundsException ex){
                 Logger.getLogger(Concordance.class.getName())
-                        .warning(String.format("Error at DocId %d: %s", docid_x, ex.toString()));
+                        .warning(String.format("Error at DocId %d", docid_x));
+                System.out.println(ex.getLocalizedMessage());
             }
         }
 

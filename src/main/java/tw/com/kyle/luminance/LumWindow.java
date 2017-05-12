@@ -58,9 +58,10 @@ public class LumWindow {
                 Document ref_doc = lum_reader.GetDocument(LumUtils.BytesRefToLong(doc.getBinaryValue("base_ref")));
                 initialize_mappings(ref_doc, lum_reader);
             }
-
-            min_guard = (int x) -> Math.max(0, x);
-            max_guard = (int x) -> Math.min(ref_doc_content.length() - 1, x);
+            
+            int REF_DOC_MAX = Math.max(ref_doc_content.length() - 1, 0);
+            min_guard = (int x) -> Math.max(0, Math.min(REF_DOC_MAX, x));
+            max_guard = (int x) -> Math.min(REF_DOC_MAX, x);
         } catch (IOException ex) {
             Logger.getLogger(LumWindow.class.getName()).log(Level.SEVERE, null, ex);
         } catch (NullPointerException ex) {
@@ -127,7 +128,10 @@ public class LumWindow {
 
         if (builder.nSeq() > 1) {
             logger.info("More than one sequence when reconstructing");
+        } else if (builder.nSeq() == 0){
+            builder.combines(new ArrayList<>());
         }
+        
         return builder.get(0);
         
     }
@@ -251,6 +255,8 @@ public class LumWindow {
         }
         for (long a_uuid : annot_uuids) {
             Document adoc = lum_reader.GetDocument(a_uuid);
+            if (!adoc.get("class").equals(LumDocument.ANNO)) 
+                continue;
             lum_annot.AddAnnotation(a_uuid, adoc);
         }
     }

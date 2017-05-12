@@ -121,6 +121,7 @@ public class AsbcXmlAdaptor implements LumIndexInterface {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < sentence_list.getLength(); ++i) {
             Node sent_elem = (Element) sentence_list.item(i);
+            if (i > 0) sb.append("\u3000");
             sb.append(sent_elem.getTextContent());
         }
         return sb.toString();
