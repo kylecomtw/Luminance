@@ -7,11 +7,7 @@ package tw.com.kyle.luminance;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.OptionalInt;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import tw.com.kyle.luminance.LumToken.LTField;
 
 /**

@@ -1,0 +1,28 @@
+# base_ref: {REF}
+# anno_type: seg
+# anno_name: ckip-auto
+
+就(D)　心理(Na)　角度(Na)　而(Cbb)　言(VE)　：(COLONCATEGORY)
+心存僥倖(VH)　、(PAUSECATEGORY)　投機取巧(VH)　選擇(VC)　以(P)　作弊(VA)　方式(Na)　取得(VC)　好(VH)　成績(Na)　的(DE)　人(Na)　，(COMMACATEGORY)
+在(P)　得逞(VH)　之後(Ng)　反倒(Cbb)　行為(Na)　變相(D)　被(P)　「(PARENTHESISCATEGORY)　成果(Na)　」(PARENTHESISCATEGORY)　（(PARENTHESISCATEGORY)　例如(P)　：(COLONCATEGORY)
+較(Dfa)　高(VH)　的(DE)　分數(Na)　）(PARENTHESISCATEGORY)　增強(VHC)　，(COMMACATEGORY)
+所以(Cbb)　常(D)　會(D)　食髓知味(VH)　而(Cbb)　反覆(D)　出現(VH)　作弊(VA)　的(DE)　行為(Na)　。(PERIODCATEGORY)
+因此(Cbb)　，(COMMACATEGORY)
+若(Cbb)　真(D)　想(VE)　蒐證(VA)　舉發(VC)　，(COMMACATEGORY)
+並(Cbb)　不(D)　怕(VK)　沒(VJ)　機會(Na)　。(PERIODCATEGORY)
+生活(Na)　中(Ng)　的(DE)　事件(Na)　，(COMMACATEGORY)
+都(D)　是(SHI)　孩子(Na)　學習(VC)　成長(VH)　的(DE)　機會(Na)　。(PERIODCATEGORY)
+就(D)　像(VG)　「(PARENTHESISCATEGORY)　檢舉(VC)　」(PARENTHESISCATEGORY)　固然(Cbb)　重要(VH)　，(COMMACATEGORY)
+也(D)　的確(D)　是(SHI)　一(Neu)　種(Nf)　伸張(VC)　正義(Na)　的(DE)　重要(VH)　途徑(Na)　，(COMMACATEGORY)
+並(Cbb)　讓(VL)　孩子(Na)　不平(VH)　、(PAUSECATEGORY)　憤怒(VH)　等(Cab)　情緒(Na)　得以(D)　暫時(D)　被(P)　撫平(VC)　。(PERIODCATEGORY)
+但(Cbb)　除此之外(Dk)　，(COMMACATEGORY)
+從(P)　孩子(Na)　對(P)　這(Nep)　一(Neu)　類(Nf)　事件(Na)　的(DE)　情緒(Na)　與(Caa)　行為(Na)　反應(Na)　方式(Na)　，(COMMACATEGORY)
+其實(D)　有(V_2)　許多(Neqa)　值得(VH)　跟(P)　孩子(Na)　對話(Na)　與(Caa)　討論(VE)　的(DE)　空間(Na)　，(COMMACATEGORY)
+協助(VC)　孩子(Na)　更加(Dfa)　清楚(VH)　看見(VE)　自己(Nh)　這些(Neqa)　反應(Na)　背後(Nc)　的(DE)　意義(Na)　。(PERIODCATEGORY)
+第一(Neu)　個(Nf)　可以(D)　引導(VC)　孩子(Na)　去(D)　思考(VE)　的(DE)　問題(Na)　是(SHI)　：(COLONCATEGORY)
+「(PARENTHESISCATEGORY)　當(P)　周遭(Nc)　有(V_2)　同學(Na)　用(P)　作弊(VA)　的(DE)　方式(Na)　取得(VC)　好(VH)　成績(Na)　時(Ng)　，(COMMACATEGORY)
+你(Nh)　卻(D)　成功(VH)　抗拒(VC)　了(Di)　誘惑(VC)　、(PAUSECATEGORY)　拒絕(VF)　做(VC)　同樣(VH)　的(DE)　行為(Na)　，(COMMACATEGORY)
+是(SHI)　怎麼(D)　做到(VE)　的(DE)　？(QUESTIONCATEGORY)
+」(PARENTHESISCATEGORY)　透過(P)　討論(VE)　的(DE)　過程(Na)　，(COMMACATEGORY)
+一來(Neu)　肯定(VK)　孩子(Na)　、(PAUSECATEGORY)　鞏固(VHC)　孩子(Na)　的(DE)　正向(VH)　行為(Na)　，(COMMACATEGORY)
+二來(Cbb)　也(D)　協助(VC)　孩子(Na)　去(D)　覺察(VE)　行為(Na)　抉擇(Na)　背後(Nc)　的(DE)　考量(VE)　因素(Na)　。(PERIODCATEGORY)

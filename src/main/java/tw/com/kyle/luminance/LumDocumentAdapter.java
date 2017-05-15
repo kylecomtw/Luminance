@@ -45,7 +45,7 @@ public class LumDocumentAdapter {
                 }
 
             } else {
-                sb.append(line.trim());
+                sb.append(line.trim()); sb.append("\n");
             }
         }
 
