@@ -19,21 +19,19 @@ public class AnnotationProvider {
     private long anno_ref_uuid = -1;
     private LumPositionMap pos_map = null;
     private List<LumDocument> doc_list = new ArrayList<>();    
-    private LumReader reader = null;
     private Logger logger = Logger.getLogger(AnnotationProvider.class.getName());
     
-    public AnnotationProvider(String inputs, boolean isPlainText, LumReader r) {
-        init(inputs, true);
-        reader = r;
+    public AnnotationProvider(String inputs, boolean isPlainText) {
+        init(inputs, isPlainText);
     }
     
-    public AnnotationProvider(String inputs, LumReader r) {
+    public AnnotationProvider(String inputs) {
         init(inputs, false);
-        reader = r;
     }
     
     private void init(String inputs, boolean isPlainText) {
         try {
+            inputs = TextUtils.normalizeSpace(inputs);
             if (inputs.substring(0, Math.min(100, inputs.length()))
                     .replace(" ", "").contains("#base_ref:")) {
                 //! this is a anno doc format                
@@ -86,20 +84,9 @@ public class AnnotationProvider {
 
     private void build_doc_from_adaptor(String inputs) throws IOException {                
         LumDocument lum_doc = LumDocumentAdapter.FromText(inputs);
-        String ref_txt = "";
-        if (reader != null){
-            ref_txt = reader.GetDocument(lum_doc.GetBaseRef()).get("content");
-        } else {
-            logger.severe("No instance of LumReader is specified");
-            return;
-        }
-        if (ref_txt.length() != ref_txt.length() || !(ref_txt.equals(lum_doc.GetContent()))) {
-            logger.severe("Input annotation does not match with the discourse stored in index");
-            logger.severe("Operation aborted");
-            return;
-        }
         
-        pos_map = LumPositionMap.Get(lum_doc.GetContent());
+        String raw_text = TextUtils.extract_raw_text(lum_doc.GetContent());
+        pos_map = LumPositionMap.Get(raw_text);
         
         if (lum_doc.GetAnnoType().equals(LumDocument.ANNO_SEGPOS)) {
             List<String[]> anno_seg_data = TextUtils.extract_seg_annot(lum_doc.GetContent());

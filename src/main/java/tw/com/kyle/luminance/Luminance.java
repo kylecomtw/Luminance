@@ -64,9 +64,10 @@ public class Luminance {
 
     public JsonElement add_document(String text) throws IOException {
 
-        JsonObject ret = new JsonObject();
+        JsonObject ret = new JsonObject();        
+        LumReader lum_reader = new LumReader(indexer.GetReader());
         AnnotationProvider annot_prov = new AnnotationProvider(text);
-        for (LumDocument lum_doc : annot_prov.IndexableDocuments()) {
+        for (LumDocument lum_doc : annot_prov.IndexableDocuments()) {            
             indexer.index_doc(lum_doc);
         }
 

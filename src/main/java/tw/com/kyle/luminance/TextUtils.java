@@ -38,6 +38,13 @@ public class TextUtils {
         return new_txt;
     }
     
+    public static String normalizeSpace(String intxt) {
+        String normTxt = Arrays.asList(intxt.split("[\n\r]+")).stream()
+              .map((x)->x.trim())
+              .collect(Collectors.joining("\n"));
+        return normTxt;
+    }
+    
     public static String extract_raw_text(String annots){
         if (is_segmented(annots) || is_pos_tagged(annots)){
             String[] tokens = annots.split("[\u3000\n]");
