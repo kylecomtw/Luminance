@@ -18,7 +18,7 @@ public class LumDocumentAdapter {
 
     public static LumDocument FromText(String text) {
         LumDocument doc = new LumDocument();
-        String[] lines = text.split("[\r\n]");
+        String[] lines = text.trim().split("[\r\n]");
 
         StringBuilder sb = new StringBuilder();
         for (String line : lines) {

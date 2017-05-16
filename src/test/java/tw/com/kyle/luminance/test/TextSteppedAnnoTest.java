@@ -23,11 +23,11 @@ public class TextSteppedAnnoTest {
 
     String INDEX_DIR = "h:/index_dir";
 
-    @Test @Ignore   
+    @Test
     public void test_plaintext() throws IOException {
         Luminance.clean_index(INDEX_DIR);
         Luminance lum = new Luminance(INDEX_DIR);
-        String txt = readAll("etc/test/plain_text.txt");;
+        String txt = readAll("etc/test/plain_text.txt");
         JsonObject elem = (JsonObject) lum.add_single_document(txt);
 
         long ref_uuid = elem.get("uuid").getAsLong();
@@ -74,16 +74,32 @@ public class TextSteppedAnnoTest {
         lum.begin_write();
         String anno_seg1 = readAll("etc/test/multiline_seg.txt").replace("{REF}", String.valueOf(ref_uuid));
         lum.add_document(anno_seg1);
+        
+        String anno_tag1 = readAll("etc/test/multiline_tag.txt").replace("{REF}", String.valueOf(ref_uuid));
+        lum.add_document(anno_tag1);
         lum.end_write();
         
-        LumReader reader = new LumReader(INDEX_DIR);
-        Concordance concord = new Concordance(reader, 10);
-        List<KwicResult> kwics = concord.findWord("孩子");        
-        KwicResult kwic1 = kwics.get(0);                
-        kwics.forEach((x) -> System.out.println(x));
-        assertTrue(kwic1.prec_context.get(kwic1.prec_context.size()-2).word.equals("都"));
+        try (LumReader reader = new LumReader(INDEX_DIR);){        
+            Concordance concord = new Concordance(reader, 10);
+            List<KwicResult> kwics = concord.findWord("孩子");        
+            KwicResult kwic1 = kwics.get(0);                
+            KwicResult kwic2 = kwics.get(1);
+            kwics.forEach((x) -> System.out.println(x));
+            assertTrue(kwic1.toString().equals("。　生活　中　的　事件　，　都　是　<孩子>　學習　成長　的　機會　。　就　像"));
+            assertTrue(kwic2.toString().equals("正義　的　重要　途徑　，　並　讓　<孩子>　不平　、　憤怒　等　情緒　得以"));
+            
+            List<KwicResult> kwics_tag = concord.findPos("NEG");
+            kwics_tag.forEach((x)->System.out.println(x));
+            assertTrue(kwics_tag.size() == 3);
+            
+            List<KwicResult> kwics_tag_pos = concord.findPos("POS");
+            kwics_tag_pos.forEach((x)->System.out.println(x));
+            assertTrue(kwics_tag_pos.size() == 2);
+            
+        }
     }
-
+    
+    
     private String readAll(String fpath) throws IOException {
         String txt = String.join("\n",
                 Files.readAllLines(Paths.get(fpath), StandardCharsets.UTF_8));

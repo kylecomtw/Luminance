@@ -34,15 +34,10 @@ public class TextUtils {
     public static String normalize(String intxt) {        
         String new_txt = intxt.replace(")", "）");
         new_txt = new_txt.replace("(", "（");
-        
-        return new_txt;
-    }
-    
-    public static String normalizeSpace(String intxt) {
-        String normTxt = Arrays.asList(intxt.split("[\n\r]+")).stream()
+        String normTxt = Arrays.asList(new_txt.split("[ \t\n\r]+")).stream()
               .map((x)->x.trim())
-              .collect(Collectors.joining("\n"));
-        return normTxt;
+              .collect(Collectors.joining(""));
+        return normTxt;        
     }
     
     public static String extract_raw_text(String annots){
@@ -67,7 +62,7 @@ public class TextUtils {
         List<String[]> parsed = Arrays.asList(tokens).stream()
                 .map((String x)->{
                     Matcher m = pat.matcher(x);
-                    if(!m.find()) return new String[]{x};
+                    if(!m.find()) return new String[]{x, ""};
                     else return new String[]{m.group(1), m.group(2)};
                 }).collect(Collectors.toList());
         return parsed;
@@ -108,13 +103,14 @@ public class TextUtils {
     
     public static List<String> make_annotation_format(LumPositionMap pos_map, List<String[]> annot_list) {
         List<String> atxt = new ArrayList<>();
-        
+
         int last_pos = 0;
         List<Integer> pos_list = new ArrayList<>();
         
         for(int i = 0; i < annot_list.size(); i++){
             String term = annot_list.get(i)[0];
             String tag = annot_list.get(i)[1];
+
             if (term.length() == 0) continue;
             
             if (term.contains("@")){
@@ -127,16 +123,21 @@ public class TextUtils {
                 if(pos >= 0 && pos - last_pos <= slop) {                                        
                     pos_list.add(pos);
                     last_pos = pos;
+                } else if (pos_list.size() > 0 && pos < 0){
+                    //! a none-indexed character appears in the middle of term
+                    //! just ignore it
                 } else {
                     pos_list.clear();
                     break;                    
                 }                                
             }
                         
-            if (pos_list.size() > 0 && pos_list.size() == term.length()){
+            if (pos_list.size() > 0){
                 int spos = pos_list.stream().min((Integer x, Integer y) -> x-y).get();
                 int epos = pos_list.stream().max((Integer x, Integer y) -> x-y).get();
-                atxt.add(String.format("(%d,%d,%s)", spos, epos + 1, tag));
+                if (tag.length() > 0){
+                    atxt.add(String.format("(%d,%d,%s)", spos, epos + 1, tag));
+                }
                 pos_list.clear();
             }
         }

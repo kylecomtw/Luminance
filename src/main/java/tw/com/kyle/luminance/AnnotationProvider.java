@@ -30,15 +30,14 @@ public class AnnotationProvider {
     }
     
     private void init(String inputs, boolean isPlainText) {
-        try {
-            inputs = TextUtils.normalizeSpace(inputs);
+        try {            
             if (inputs.substring(0, Math.min(100, inputs.length()))
                     .replace(" ", "").contains("#base_ref:")) {
                 //! this is a anno doc format                
                 build_doc_from_adaptor(inputs);
             } else {
                 //! it is a plain text, extract all informations we can
-                pos_map = LumPositionMap.Get(TextUtils.extract_raw_text(inputs));
+                
                 build_anno_doc_list(inputs, isPlainText);
             }
         } catch (IOException ex) {
@@ -63,8 +62,14 @@ public class AnnotationProvider {
         doc_list.add(doc);
     }
 
-    private void build_anno_doc_list(String inputs, boolean isPlainText) {
-        LumDocument base_doc = create_discourse_doc(inputs);
+    private void build_anno_doc_list(String inputs, boolean isPlainText) throws IOException {
+        //! make sure the text get into discourse content and the one used to generate pos_map
+        //! must be the same        
+        String raw_text = TextUtils.extract_raw_text(inputs);
+        String norm_text = TextUtils.normalize(raw_text);
+        pos_map = LumPositionMap.Get(norm_text);
+        
+        LumDocument base_doc = create_discourse_doc(norm_text);
         doc_list.add(base_doc);
         long ref_uuid = base_doc.GetUuid();
 
@@ -84,9 +89,10 @@ public class AnnotationProvider {
 
     private void build_doc_from_adaptor(String inputs) throws IOException {                
         LumDocument lum_doc = LumDocumentAdapter.FromText(inputs);
-        
+                
         String raw_text = TextUtils.extract_raw_text(lum_doc.GetContent());
-        pos_map = LumPositionMap.Get(raw_text);
+        String norm_text = TextUtils.normalize(raw_text);
+        pos_map = LumPositionMap.Get(norm_text);
         
         if (lum_doc.GetAnnoType().equals(LumDocument.ANNO_SEGPOS)) {
             List<String[]> anno_seg_data = TextUtils.extract_seg_annot(lum_doc.GetContent());
